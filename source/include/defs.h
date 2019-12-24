@@ -1,0 +1,251 @@
+// defs.h
+// Copyright (c) 2014 - 2017, zhiayang
+// Licensed under the Apache License Version 2.0.
+
+#pragma once
+#include <limits.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "zpr.h"
+#include "utils.h"
+#include "tinyxml2.h"
+
+#define COLOUR_RESET			"\033[0m"
+#define COLOUR_BLACK			"\033[30m"			// Black
+#define COLOUR_RED				"\033[31m"			// Red
+#define COLOUR_GREEN			"\033[32m"			// Green
+#define COLOUR_YELLOW			"\033[33m"			// Yellow
+#define COLOUR_BLUE				"\033[34m"			// Blue
+#define COLOUR_MAGENTA			"\033[35m"			// Magenta
+#define COLOUR_CYAN				"\033[36m"			// Cyan
+#define COLOUR_WHITE			"\033[37m"			// White
+#define COLOUR_BLACK_BOLD		"\033[1m"			// Bold Black
+#define COLOUR_RED_BOLD			"\033[1m\033[31m"	// Bold Red
+#define COLOUR_GREEN_BOLD		"\033[1m\033[32m"	// Bold Green
+#define COLOUR_YELLOW_BOLD		"\033[1m\033[33m"	// Bold Yellow
+#define COLOUR_BLUE_BOLD		"\033[1m\033[34m"	// Bold Blue
+#define COLOUR_MAGENTA_BOLD		"\033[1m\033[35m"	// Bold Magenta
+#define COLOUR_CYAN_BOLD		"\033[1m\033[36m"	// Bold Cyan
+#define COLOUR_WHITE_BOLD		"\033[1m\033[37m"	// Bold White
+#define COLOUR_GREY_BOLD		"\033[30;1m"		// Bold Grey
+
+
+
+
+// https://stackoverflow.com/questions/28367913/how-to-stdhash-an-unordered-stdpair
+
+template<typename T>
+void _hash_combine(std::size_t& seed, const T& key)
+{
+	std::hash<T> hasher;
+	seed ^= hasher(key) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+namespace std
+{
+	template<typename T1, typename T2>
+	struct hash<std::pair<T1, T2>>
+	{
+		size_t operator () (const std::pair<T1, T2>& p) const
+		{
+			size_t seed = 0;
+			_hash_combine(seed, p.first);
+			_hash_combine(seed, p.second);
+			return seed;
+		}
+	};
+}
+
+namespace util
+{
+	void indent_log(int n = 1);
+	void unindent_log(int n = 1);
+
+	int get_log_indent();
+
+	template <typename... Args>
+	static void error(const std::string& fmt, Args&&... args)
+	{
+		for(int i = 0; i < get_log_indent(); i++)
+			fprintf(stderr, "  ");
+
+		fprintf(stderr, " %s*%s %s\n", COLOUR_RED_BOLD, COLOUR_RESET, zpr::sprint(fmt, args...).c_str());
+	}
+
+	template <typename... Args>
+	static void log(const std::string& fmt, Args&&... args)
+	{
+		for(int i = 0; i < get_log_indent(); i++)
+			printf("  ");
+
+		printf(" %s*%s %s\n", COLOUR_GREEN_BOLD, COLOUR_RESET, zpr::sprint(fmt, args...).c_str());
+	}
+
+	template <typename... Args>
+	static void info(const std::string& fmt, Args&&... args)
+	{
+		for(int i = 0; i < get_log_indent(); i++)
+			printf("  ");
+
+		printf(" %s*%s %s\n", COLOUR_BLUE_BOLD, COLOUR_RESET, zpr::sprint(fmt, args...).c_str());
+	}
+
+	size_t getFileSize(const std::string& path);
+	std::pair<uint8_t*, size_t> readEntireFile(const std::string& path);
+
+
+	static inline std::vector<std::string> splitString(std::string view, char delim = '\n')
+	{
+		std::vector<std::string> ret;
+
+		while(true)
+		{
+			size_t ln = view.find(delim);
+
+			if(ln != std::string_view::npos)
+			{
+				ret.emplace_back(view.data(), ln);
+				view = view.substr(ln + 1);
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		// account for the case when there's no trailing newline, and we still have some stuff stuck in the view.
+		if(!view.empty())
+			ret.emplace_back(view.data(), view.length());
+
+		return ret;
+	}
+}
+
+namespace args
+{
+	std::string getManualSeriesId();
+	std::string getManualCoverPath();
+
+	std::string getOutputFolder();
+	std::string getTVDBApiKey();
+
+	bool isOverridingSeriesName();
+	bool isOverridingEpisodeName();
+	bool isDeletingExistingOutput();
+
+	bool isDryRun();
+
+	std::vector<std::string> parseCmdLineOpts(int argc, char** argv);
+}
+
+
+struct SeriesMetadata
+{
+	std::string name;
+	std::string airDate;
+
+	std::vector<std::string> genres;
+
+
+	std::string id;
+};
+
+struct EpisodeMetadata
+{
+	SeriesMetadata seriesMeta;
+
+	std::string name;
+	std::string airDate;
+
+	int seasonNumber;
+	int episodeNumber;
+
+	std::string synopsis;
+	std::string description;
+
+	std::vector<std::string> actors;
+	std::vector<std::string> artists;
+	std::vector<std::string> writers;
+	std::vector<std::string> directors;
+
+
+	std::string id;
+};
+
+namespace misc
+{
+	// { series, season, episode, title }
+	std::tuple<std::string, int, int, std::string> parseTVShow(const std::string& filename);
+
+	// { name, year }
+	std::tuple<std::string, int> parseMovie(const std::string& filename);
+}
+
+namespace tvdb
+{
+	void login();
+
+	void setToken(const std::string& token);
+	std::string getToken();
+
+	EpisodeMetadata fetchEpisodeMetadata(const std::string& series, int season, int episode, const std::string& title,
+		const std::string& manualSeriesId);
+}
+
+namespace cache
+{
+	std::string getSeriesId(const std::string& name);
+	void setSeriesId(const std::string& name, const std::string& id);
+
+	SeriesMetadata getSeriesMeta(const std::string& id);
+	void addSeriesMeta(const std::string& id, const SeriesMetadata& meta);
+	bool haveSeriesMeta(const std::string& id);
+}
+
+namespace tags
+{
+	tinyxml2::XMLDocument* serialiseMetadata(const EpisodeMetadata& meta);
+}
+
+
+
+
+
+// defer implementation
+// credit: gingerBill
+// shamelessly stolen from https://github.com/gingerBill/gb
+
+
+namespace __dontlook
+{
+	// NOTE(bill): Stupid fucking templates
+	template <typename T> struct gbRemoveReference       { typedef T Type; };
+	template <typename T> struct gbRemoveReference<T &>  { typedef T Type; };
+	template <typename T> struct gbRemoveReference<T &&> { typedef T Type; };
+
+	/// NOTE(bill): "Move" semantics - invented because the C++ committee are idiots (as a collective not as indiviuals (well a least some aren't))
+	template <typename T> inline T &&gb_forward(typename gbRemoveReference<T>::Type &t)  { return static_cast<T &&>(t); }
+	template <typename T> inline T &&gb_forward(typename gbRemoveReference<T>::Type &&t) { return static_cast<T &&>(t); }
+	template <typename T> inline T &&gb_move   (T &&t)                                   { return static_cast<typename gbRemoveReference<T>::Type &&>(t); }
+	template <typename F>
+	struct gbprivDefer {
+		F f;
+		gbprivDefer(F &&f) : f(gb_forward<F>(f)) {}
+		~gbprivDefer() { f(); }
+	};
+	template <typename F> gbprivDefer<F> gb__defer_func(F &&f) { return gbprivDefer<F>(gb_forward<F>(f)); }
+}
+
+#define GB_DEFER_1(x, y) x##y
+#define GB_DEFER_2(x, y) GB_DEFER_1(x, y)
+#define GB_DEFER_3(x)    GB_DEFER_2(x, __COUNTER__)
+#define defer(code) auto GB_DEFER_3(_defer_) = __dontlook::gb__defer_func([&]()->void{code;})
+
+
+
+
+
+

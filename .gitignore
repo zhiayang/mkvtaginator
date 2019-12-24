@@ -1,0 +1,7 @@
+*.sublime-*
+*.cpp.d
+*.o
+
+*.gch
+build
+.clang_complete
