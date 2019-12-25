@@ -140,6 +140,7 @@ namespace args
 	bool isDeletingExistingOutput();
 
 	bool isDryRun();
+	bool isNoAutoCover();
 
 	std::vector<std::string> parseCmdLineOpts(int argc, char** argv);
 }

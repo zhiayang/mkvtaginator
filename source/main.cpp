@@ -224,7 +224,7 @@ int main(int argc, char** argv)
 			});
 
 			std::fs::path cover = specCoverFile;
-			if(cover.empty())
+			if(cover.empty() && !args::isNoAutoCover())
 			{
 				for(const auto& x : tries)
 				{
