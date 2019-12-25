@@ -16,6 +16,18 @@ namespace tvdb
 {
 	static constexpr const char* API_URL = "https://api.thetvdb.com";
 
+	static std::string format_date(const std::string& str)
+	{
+		std::smatch sm;
+		std::regex_match(str, sm, std::regex("(\\d+)-(\\d+)-(\\d+)"));
+		if(sm.size() < 4) return str;
+
+		int y = std::stoi(sm[1]);
+		int m = std::stoi(sm[2]);
+		int d = std::stoi(sm[3]);
+
+		return zpr::sprint("%d-%02d-%02d", y, m, d);
+	}
 
 	SeriesMetadata fetchSeriesMetadata(const std::string& name, const std::string& manualSeriesId)
 	{
@@ -38,10 +50,11 @@ namespace tvdb
 
 				if(r.status_code != 200)
 				{
-					util::error("failed to find '%s'", name); util::indent_log();
+					util::error("http request failed (searching series by name) - '%s'", r.url); util::indent_log();
 					util::info("status: %d", r.status_code);
-					util::info("body: %s", r.text);
+					if(r.status_code != 404) util::info("body: %s", r.text);
 
+					util::unindent_log();
 					goto fail;
 				}
 
@@ -52,9 +65,69 @@ namespace tvdb
 				if(results.empty())
 					goto fail;
 
+				std::vector<misc::Option> options;
+				for(const auto& x : results)
+				{
+					misc::Option opt;
 
-				// take the first one for now...
-				seriesId = results[0].get("id").get<std::string>();
+					opt.title = x.get("seriesName").get<std::string>();
+
+					if(auto aliases = x.get("aliases").get<pj::array>(); !aliases.empty())
+					{
+						misc::Option::Info info;
+
+						info.heading = "aliases:";
+						info.items = util::map(aliases, [](const pj::value& x) -> auto {
+							return x.get<std::string>();
+						});
+
+						opt.infos.push_back(info);
+					}
+
+					if(auto airdate = x.get("firstAired"); !airdate.is<pj::null>())
+					{
+						misc::Option::Info info;
+
+						info.heading = "aired:";
+						info.subheading = format_date(airdate.get<std::string>());
+
+						opt.infos.push_back(info);
+					}
+
+					{
+						misc::Option::Info info;
+
+						info.heading = "id:";
+						info.subheading = std::to_string(static_cast<size_t>(x.get("id").get<double>()));
+
+						opt.infos.push_back(info);
+					}
+
+					if(auto overview = x.get("overview"); !overview.is<pj::null>())
+					{
+						misc::Option::Info info;
+						info.heading = "overview:";
+
+						info.body = overview.get<std::string>();
+						opt.infos.push_back(info);
+					}
+
+					options.push_back(opt);
+				}
+
+				// TODO: make this configurable
+				constexpr size_t limit = 3;
+
+				bool more = false;
+				size_t sel = misc::userChoice(options, &more, 0, limit);
+
+				// if they wanted more, print the rest.
+				if(more) sel = misc::userChoice(options, &more, limit);
+
+
+				if(sel == 0) goto fail;
+
+				seriesId = std::to_string(static_cast<size_t>(results[sel - 1].get("id").get<double>()));
 				cache::setSeriesId(name, seriesId);
 			}
 		}
@@ -72,6 +145,8 @@ namespace tvdb
 		}
 		else
 		{
+			ret.id = seriesId;
+
 			auto r = cpr::Get(
 				cpr::Url(zpr::sprint("%s/series/%s", API_URL, seriesId)),
 				cpr::Header({{ "Authorization", zpr::sprint("Bearer %s", getToken()) }})
@@ -79,10 +154,11 @@ namespace tvdb
 
 			if(r.status_code != 200)
 			{
-				util::error("failed to find '%s'", name); util::indent_log();
+				util::error("http request failed (get series info) - '%s'", r.url); util::indent_log();
 				util::info("status: %d", r.status_code);
-				util::info("body: %s", r.text);
+				if(r.status_code != 404) util::info("body: %s", r.text);
 
+				util::unindent_log();
 				goto fail;
 			}
 
@@ -92,16 +168,45 @@ namespace tvdb
 			auto data = resp.get("data");
 
 			ret.name    = data.get("seriesName").get<std::string>();
-			ret.airDate = data.get("firstAired").get<std::string>();
+			ret.airDate = format_date(data.get("firstAired").get<std::string>());
 			ret.genres  = util::map(data.get("genre").get<pj::array>(), [](const pj::value& x) -> std::string {
 				return x.get<std::string>();
 			});
+
+
+			// actors come from elsewhere:
+			{
+				auto r = cpr::Get(
+					cpr::Url(zpr::sprint("%s/series/%s/actors", API_URL, seriesId)),
+					cpr::Header({{ "Authorization", zpr::sprint("Bearer %s", getToken()) }})
+				);
+
+				if(r.status_code != 200)
+				{
+					util::error("http failed (get series actors) - '%s'", r.url); util::indent_log();
+					util::info("status: %d", r.status_code);
+					if(r.status_code != 404) util::info("body: %s", r.text);
+
+					util::unindent_log();
+					goto fail;
+				}
+
+				pj::value data;
+				pj::parse(data, r.text);
+				data = data.get("data");
+
+				ret.actors = util::map(data.get<pj::array>(), [](const pj::value& v) -> auto {
+					return v.get("name").get<std::string>();
+				});
+			}
+
 
 			if(args::isOverridingSeriesName())
 				ret.name = name;
 		}
 
-		ret.id = seriesId;
+		ret.valid = true;
+
 	fail:
 		return ret;
 	}
@@ -112,6 +217,8 @@ namespace tvdb
 	{
 		EpisodeMetadata ret;
 		ret.seriesMeta = fetchSeriesMetadata(series, manualSeriesId);
+		if(!ret.seriesMeta.valid)
+			return ret;
 
 		{
 			auto r = cpr::Get(
@@ -125,10 +232,11 @@ namespace tvdb
 
 			if(r.status_code != 200)
 			{
-				util::error("failed to find '%s' (s: %02d, e: %02d)", series, season, episode); util::indent_log();
+				util::error("http failed (get episode info) - '%s'", r.url); util::indent_log();
 				util::info("status: %d", r.status_code);
-				util::info("body: %s", r.text);
+				if(r.status_code != 404) util::info("body: %s", r.text);
 
+				util::unindent_log();
 				goto fail;
 			}
 
@@ -167,36 +275,13 @@ namespace tvdb
 			ret.directors       = util::map(data.get("directors").get<pj::array>(),
 				[](const pj::value& v) -> auto { return v.get<std::string>(); });
 
-
-			// actors come from elsewhere:
-			{
-				auto r = cpr::Get(
-					cpr::Url(zpr::sprint("%s/series/%s/actors", API_URL, ret.seriesMeta.id)),
-					cpr::Header({{ "Authorization", zpr::sprint("Bearer %s", getToken()) }})
-				);
-
-				if(r.status_code != 200)
-				{
-					util::error("failed to find '%s' (s: %02d, e: %02d)", series, season, episode); util::indent_log();
-					util::info("status: %d", r.status_code);
-					util::info("body: %s", r.text);
-
-					goto fail;
-				}
-
-				pj::value data;
-				pj::parse(data, r.text);
-				data = data.get("data");
-
-				ret.actors = util::map(data.get<pj::array>(), [](const pj::value& v) -> auto {
-					return v.get("name").get<std::string>();
-				});
-			}
+			ret.actors = ret.seriesMeta.actors;
 
 			if(args::isOverridingEpisodeName())
 				ret.name = title;
 		}
 
+		ret.valid = true;
 	fail:
 		return ret;
 	}
@@ -226,7 +311,7 @@ namespace tvdb
 		auto key = args::getTVDBApiKey();
 		if(key.empty())
 		{
-			util::error("error: missing api-key for theTVDB (use '--tvdb-api')");
+			util::error("error: missing api-key for theTVDB (use '--tvdb-api <api_key>', see '--help')");
 			exit(-1);
 		}
 
@@ -240,7 +325,7 @@ namespace tvdb
 		{
 			util::error("failed to login to thetvdb!"); util::indent_log();
 			util::info("status: %d", r.status_code);
-			util::info("body: %s", r.text);
+			if(r.status_code != 404) util::info("body: %s", r.text);
 
 			exit(-1);
 		}

@@ -374,6 +374,34 @@ namespace util
 
 
 
+
+	template <typename T>
+	std::vector<std::vector<T>> combinations(std::vector<T> xs)
+	{
+		auto fact = [](size_t x) -> size_t {
+			size_t ret = 1;
+			while(x > 1)
+				ret *= x, x -= 1;
+
+			return ret;
+		};
+
+		std::vector<std::vector<T>> ret;
+		ret.reserve(fact(xs.size()));
+
+		do {
+			auto copy = xs;
+			std::sort(copy.begin(), copy.end());
+
+			ret.push_back(copy);
+		} while(std::next_permutation(xs.begin(), xs.end()));
+
+		ret.erase(std::unique(ret.begin(), ret.end()), ret.end());
+		return ret;
+	}
+
+
+
 	template <typename T>
 	std::vector<std::vector<T>> permutations(std::vector<T> xs)
 	{
@@ -475,6 +503,12 @@ namespace util
 		template <typename T>
 		T&& operator() (T&& x) { return std::forward<T>(x); }
 	};
+
+	template <typename T>
+	std::string tostring(const T& x)
+	{
+		return std::to_string(x);
+	}
 }
 
 

@@ -27,11 +27,6 @@ int main(int argc, char** argv)
 	{
 		util::info("skipping search: using series id '%s'", args::getManualSeriesId());
 	}
-	else
-	{
-		util::error("error: not supported.");
-		abort();
-	}
 
 	std::string specCoverFile;
 	if(auto c = args::getManualCoverPath(); !c.empty())
@@ -75,14 +70,21 @@ int main(int argc, char** argv)
 		auto filepath = std::fs::path(file);
 
 		util::log("%s", filepath.filename().string()); util::indent_log();
+		defer(zpr::println(""));
 		defer(util::unindent_log());
-
 
 		if(!std::fs::exists(filepath))
 		{
 			util::error("error: nonexistent file '%s'", filepath.string());
 			continue;
 		}
+		else if(filepath.extension() != ".mkv")
+		{
+			util::error("error: ignoring non-mkv file (extension was '%s')",
+				filepath.extension().string());
+			continue;
+		}
+
 		if(auto out = args::getOutputFolder(); !out.empty())
 		{
 			if(std::fs::equivalent(filepath.parent_path(), std::fs::path(out)))
@@ -163,6 +165,12 @@ int main(int argc, char** argv)
 			if(!series.empty())
 			{
 				auto metadata = tvdb::fetchEpisodeMetadata(series, season, episode, title, args::getManualSeriesId());
+				if(!metadata.valid)
+				{
+					util::error("failed to find metadata");
+					continue;
+				}
+
 				auto xml = tags::serialiseMetadata(metadata);
 
 				auto printer = new tinyxml2::XMLPrinter();
@@ -328,7 +336,7 @@ int main(int argc, char** argv)
 				std::fs::remove(f);
 		}
 
-		util::log("done\n");
+		util::log("done");
 		doneFiles += 1;
 	}
 

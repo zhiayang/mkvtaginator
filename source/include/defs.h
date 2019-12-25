@@ -93,9 +93,12 @@ namespace util
 		printf(" %s*%s %s\n", COLOUR_BLUE_BOLD, COLOUR_RESET, zpr::sprint(fmt, args...).c_str());
 	}
 
+	size_t getTerminalWidth();
+	size_t displayedTextLength(const std::string_view& sv);
+	std::wstring corruptUTF8ToWChar(const std::string& s);
+
 	size_t getFileSize(const std::string& path);
 	std::pair<uint8_t*, size_t> readEntireFile(const std::string& path);
-
 
 	static inline std::vector<std::string> splitString(std::string view, char delim = '\n')
 	{
@@ -144,24 +147,28 @@ namespace args
 
 struct SeriesMetadata
 {
+	bool valid = false;
+
 	std::string name;
 	std::string airDate;
 
 	std::vector<std::string> genres;
-
+	std::vector<std::string> actors;
 
 	std::string id;
 };
 
 struct EpisodeMetadata
 {
+	bool valid = false;
+
 	SeriesMetadata seriesMeta;
 
 	std::string name;
 	std::string airDate;
 
-	int seasonNumber;
-	int episodeNumber;
+	int seasonNumber = 0;
+	int episodeNumber = 0;
 
 	std::string synopsis;
 	std::string description;
@@ -182,6 +189,25 @@ namespace misc
 
 	// { name, year }
 	std::tuple<std::string, int> parseMovie(const std::string& filename);
+
+	struct Option
+	{
+		std::string title;
+
+		struct Info
+		{
+			std::string heading;
+			std::string subheading;
+
+			std::vector<std::string> items;
+
+			std::string body;
+		};
+
+		std::vector<Info> infos;
+	};
+
+	size_t userChoice(const std::vector<Option>& options, bool* showmore = 0, size_t first = 0, size_t limit = 0);
 }
 
 namespace tvdb

@@ -14,11 +14,16 @@
 	#include <windows.h>
 #else
 	#include <errno.h>
+	#include <dlfcn.h>
 	#include <unistd.h>
 	#include <sys/stat.h>
+	#include <sys/ioctl.h>
 #endif
 
+#include <stdlib.h>
 #include <fstream>
+
+extern int wcwidth(wchar_t ucs);
 
 namespace util
 {
@@ -77,6 +82,67 @@ namespace util
 
 		return std::pair(buf, sz);
 	}
+
+	std::wstring corruptUTF8ToWChar(const std::string& str)
+	{
+	    std::mbstate_t state = std::mbstate_t();
+	    const char* s = str.c_str();
+
+	    size_t len = 1 + std::mbsrtowcs(NULL, &s, 0, &state);
+	    auto buf = new wchar_t[len];
+
+	    std::mbsrtowcs(buf, &s, len, &state);
+
+	    auto ret = std::wstring(buf, len - 1);
+	    delete[] buf;
+
+	    return ret;
+	}
+
+	size_t displayedTextLength(const std::string_view& str)
+	{
+		size_t len = 0;
+		auto ws = corruptUTF8ToWChar(std::string(str));
+
+		for(wchar_t wc : ws)
+			len += wcwidth(wc);
+
+		return len;
+	}
+
+#ifdef _MSC_VER
+#else
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wold-style-cast"
+#endif
+
+	size_t getTerminalWidth()
+	{
+		#if OS_WINDOWS
+		{
+			CONSOLE_SCREEN_BUFFER_INFO csbi;
+			GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+			return csbi.srWindow.Right - csbi.srWindow.Left + 1;
+		}
+		#else
+		{
+			struct winsize w;
+			ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+			return w.ws_col;
+		}
+		#endif
+	}
+
+#ifdef _MSC_VER
+#else
+	#pragma GCC diagnostic pop
+#endif
+
+
+
+
+
+
 
 
 
