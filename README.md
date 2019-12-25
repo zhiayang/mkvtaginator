@@ -1,6 +1,6 @@
 # mkvtaginator
 
-The express purpose of this program is to tag Matroska (MKV) files with metadata, and optionally embed cover art into them. Uses `mkvpropedit` behind the scenes (usually part of the `mkvtoolnix` package).
+The express purpose of this program is to tag Matroska (MKV) files with metadata, and optionally embed cover art into them. Uses `mkvmerge` and friends behind the scenes (usually part of the `mkvtoolnix` package).
 
 For the list of command-line options, use `--help`.
 
@@ -19,7 +19,7 @@ Basic usage is: `./mkvtaginator [options] <input files>`. You can pass more than
 extension (and obviously must be valid mkv files).
 
 It's recommended to use `--dry-run` to preview the command-line for `mkvpropedit`, especially when editing in-place (the default). Speaking
-of which, `mkvpropedit` must be in `$PATH` to work. There are no other external dependencies.
+of which, `mkvpropedit`, `mkvextract`, and `mkvmerge` must be in `$PATH` to work. There are no other external dependencies.
 
 Since in the typical use-case you probably already know the correct series, use `--series <SERIES_ID>` to manually specify the identifer
 of the series (for the specific provider for tv/movies), to skip searching and ensure that no user interaction is required.
@@ -50,6 +50,21 @@ The preferred file is first (ie. it will prefer a file `cover.jpg` over `poster.
 
 Currently, the only supported metadata source is [theTVDB](https://thetvdb.com). You must create your own API key, and pass it to
 the program using `--tvdb-api <API_KEY>`. More will come.
+
+
+### Caveats
+
+For some reason, certain programs (including Windows with the Icaros extension, MetaX, and probably others) only detect "valid" cover art
+if it's the first attachment in the file. For most files this is not an issue, but for anime with meticulous typesetting, there will
+often be lots of font attachments. Adding the cover art at the end, after the fonts, has been known to prevent programs from seeing the
+cover art.
+
+Thus, this program will always ensure that the cover art attachment is the first attachment in the file. If there are no other attachments,
+it is straightforward. If not, then the first attachment is extracted to a temporary file, replaced with the cover art, and the temporary
+file is attached back to the end of the file as the last attachment.
+
+Note that `mkvtaginator` is not indempotent in terms of cover art; running it multiple times on the same file (with in-place editing) will
+cause lots of cover-art attachments to pile up in the file.
 
 
 ### Contributing
