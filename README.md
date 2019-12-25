@@ -1,7 +1,6 @@
 # mkvtaginator
 
-The express purpose of this program is to tag Matroska (MKV) files with metadata, and optionally embed cover art into them. For now,
-only TV shows are supported.
+The express purpose of this program is to tag Matroska (MKV) files with metadata, and optionally embed cover art into them. Uses `mkvpropedit` behind the scenes (usually part of the `mkvtoolnix` package)
 
 For the list of command-line options, use `--help`.
 
@@ -16,7 +15,7 @@ For the list of command-line options, use `--help`.
 
 ### Usage
 
-Basic usage is: `./mkvtaginator [options] <input files>`. You can pass more than one file to the program, but they all must have the `.mkv`
+Basic usage is: `./mkvtaginator [options] <input files>`. You can pass more than one file to the program, but they must all have the `.mkv`
 extension (and obviously must be valid mkv files).
 
 It's recommended to use `--dry-run` to preview the command-line for `mkvpropedit`, especially when editing in-place (the default). Speaking
