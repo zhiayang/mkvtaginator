@@ -65,69 +65,75 @@ namespace tvdb
 				if(results.empty())
 					goto fail;
 
-				std::vector<misc::Option> options;
-				for(const auto& x : results)
+
+				size_t sel = 0;
+				if(results.size() > 1)
 				{
-					misc::Option opt;
-
-					opt.title = x.get("seriesName").get<std::string>();
-
-					if(auto aliases = x.get("aliases").get<pj::array>(); !aliases.empty())
+					std::vector<misc::Option> options;
+					for(const auto& x : results)
 					{
-						misc::Option::Info info;
+						misc::Option opt;
 
-						info.heading = "aliases:";
-						info.items = util::map(aliases, [](const pj::value& x) -> auto {
-							return x.get<std::string>();
-						});
+						opt.title = x.get("seriesName").get<std::string>();
 
-						opt.infos.push_back(info);
+						if(auto aliases = x.get("aliases").get<pj::array>(); !aliases.empty())
+						{
+							misc::Option::Info info;
+
+							info.heading = "aliases:";
+							info.items = util::map(aliases, [](const pj::value& x) -> auto {
+								return x.get<std::string>();
+							});
+
+							opt.infos.push_back(info);
+						}
+
+						if(auto airdate = x.get("firstAired"); !airdate.is<pj::null>())
+						{
+							misc::Option::Info info;
+
+							info.heading = "aired:";
+							info.subheading = format_date(airdate.get<std::string>());
+
+							opt.infos.push_back(info);
+						}
+
+						{
+							misc::Option::Info info;
+
+							info.heading = "id:";
+							info.subheading = std::to_string(static_cast<size_t>(x.get("id").get<double>()));
+
+							opt.infos.push_back(info);
+						}
+
+						if(auto overview = x.get("overview"); !overview.is<pj::null>())
+						{
+							misc::Option::Info info;
+							info.heading = "overview:";
+
+							info.body = overview.get<std::string>();
+							opt.infos.push_back(info);
+						}
+
+						options.push_back(opt);
 					}
 
-					if(auto airdate = x.get("firstAired"); !airdate.is<pj::null>())
-					{
-						misc::Option::Info info;
+					// TODO: make this configurable
+					constexpr size_t limit = 3;
 
-						info.heading = "aired:";
-						info.subheading = format_date(airdate.get<std::string>());
+					bool more = false;
+					size_t sel = misc::userChoice(options, &more, 0, limit);
 
-						opt.infos.push_back(info);
-					}
+					// if they wanted more, print the rest.
+					if(more) sel = misc::userChoice(options, &more, limit);
+					if(sel == 0) goto fail;
 
-					{
-						misc::Option::Info info;
-
-						info.heading = "id:";
-						info.subheading = std::to_string(static_cast<size_t>(x.get("id").get<double>()));
-
-						opt.infos.push_back(info);
-					}
-
-					if(auto overview = x.get("overview"); !overview.is<pj::null>())
-					{
-						misc::Option::Info info;
-						info.heading = "overview:";
-
-						info.body = overview.get<std::string>();
-						opt.infos.push_back(info);
-					}
-
-					options.push_back(opt);
+					// 'sel' here is 1-indexed.
+					sel -= 1;
 				}
 
-				// TODO: make this configurable
-				constexpr size_t limit = 3;
-
-				bool more = false;
-				size_t sel = misc::userChoice(options, &more, 0, limit);
-
-				// if they wanted more, print the rest.
-				if(more) sel = misc::userChoice(options, &more, limit);
-
-
-				if(sel == 0) goto fail;
-
-				seriesId = std::to_string(static_cast<size_t>(results[sel - 1].get("id").get<double>()));
+				seriesId = std::to_string(static_cast<size_t>(results[sel].get("id").get<double>()));
 				cache::setSeriesId(name, seriesId);
 			}
 		}
@@ -257,7 +263,7 @@ namespace tvdb
 			ret.episodeNumber   = episode;
 
 			if(auto ovv = data.get("overview"); !ovv.is<pj::null>())
-				ret.description     = ovv.get<std::string>();
+				ret.description = ovv.get<std::string>();
 
 			ret.synopsis        = ret.description.empty()
 				? "" : ret.description.substr(0, 250);
@@ -267,7 +273,6 @@ namespace tvdb
 
 			if(auto epName = data.get("episodeName"); !epName.is<pj::null>())
 				ret.name            = epName.get<std::string>();
-
 
 			ret.writers         = util::map(data.get("writers").get<pj::array>(),
 				[](const pj::value& v) -> auto { return v.get<std::string>(); });

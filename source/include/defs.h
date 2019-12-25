@@ -9,9 +9,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <filesystem>
+
 #include "zpr.h"
 #include "utils.h"
-#include "tinyxml2.h"
 
 #define COLOUR_RESET			"\033[0m"
 #define COLOUR_BLACK			"\033[30m"			// Black
@@ -140,11 +141,19 @@ namespace args
 	bool isDeletingExistingOutput();
 
 	bool isDryRun();
+	bool isStopOnError();
 	bool isNoAutoCover();
 
 	std::vector<std::string> parseCmdLineOpts(int argc, char** argv);
 }
 
+
+namespace driver
+{
+	void createOutputFolder();
+	std::vector<std::filesystem::path> collectFiles(const std::vector<std::string>& files);
+	bool processOneFile(const std::filesystem::path& filepath);
+}
 
 struct SeriesMetadata
 {
@@ -230,6 +239,11 @@ namespace cache
 	SeriesMetadata getSeriesMeta(const std::string& id);
 	void addSeriesMeta(const std::string& id, const SeriesMetadata& meta);
 	bool haveSeriesMeta(const std::string& id);
+}
+
+namespace tinyxml2
+{
+	class XMLDocument;
 }
 
 namespace tags

@@ -6,3 +6,5 @@
 build
 .clang_complete
 *.mkv
+*.jpg
+*.png

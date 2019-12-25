@@ -11,6 +11,7 @@
 #define ARG_TVDB_API_KEY            "--tvdb-api"
 #define ARG_OUTPUT_FOLDER           "--output-folder"
 #define ARG_NO_AUTO_COVER           "--no-auto-cover"
+#define ARG_STOP_ON_ERROR           "--stop-on-error"
 #define ARG_DELETE_EXISTING_OUTPUT  "--delete-existing-output"
 #define ARG_OVERRIDE_SERIES_NAME    "--override-series-name"
 #define ARG_OVERRIDE_EPISODE_NAME   "--override-episode-name"
@@ -46,6 +47,10 @@ static void setupMap()
 
 	helpList.push_back({ ARG_NO_AUTO_COVER,
 		"do not automatically detect cover art in the current folder"
+	});
+
+	helpList.push_back({ ARG_STOP_ON_ERROR,
+		"exit immediately without processing further files, if any error is encountered"
 	});
 
 	helpList.push_back({ ARG_DELETE_EXISTING_OUTPUT,
@@ -120,6 +125,7 @@ namespace args
 
 	static bool dryrun = false;
 	static bool noAutoCover = false;
+	static bool stopOnError = false;
 	static bool overrideSeriesName = false;
 	static bool overrideEpisodeName = false;
 	static bool deleteExistingOutput = false;
@@ -157,6 +163,11 @@ namespace args
 	bool isDryRun()
 	{
 		return dryrun;
+	}
+
+	bool isStopOnError()
+	{
+		return stopOnError;
 	}
 
 	bool isNoAutoCover()
@@ -235,6 +246,11 @@ namespace args
 				else if(!strcmp(argv[i], ARG_NO_AUTO_COVER))
 				{
 					noAutoCover = true;
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_STOP_ON_ERROR))
+				{
+					stopOnError = true;
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_DELETE_EXISTING_OUTPUT))

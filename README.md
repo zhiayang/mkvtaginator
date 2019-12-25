@@ -21,8 +21,8 @@ extension (and obviously must be valid mkv files).
 It's recommended to use `--dry-run` to preview the command-line for `mkvpropedit`, especially when editing in-place (the default). Speaking
 of which, `mkvpropedit`, `mkvextract`, and `mkvmerge` must be in `$PATH` to work. There are no other external dependencies.
 
-Since in the typical use-case you probably already know the correct series, use `--series <SERIES_ID>` to manually specify the identifer
-of the series (for the specific provider for tv/movies), to skip searching and ensure that no user interaction is required.
+Since in the typical use-case you probably already know the correct series, use `--id <API_SPECIFIC_ID>` to manually specify the identifer
+of the series/movie, to skip searching and ensure that no user interaction is required.
 
 To enable "out-of-place" output (ie. the input files are copied, and the new copy is modified with the originals untouched), simply use
 `--output-folder <FOLDER_PATH>`; for any given input file, the output path must not coincide with the path of the input &mdash; since that
@@ -88,6 +88,11 @@ These are:
 
 
 
+### API attribution
+
+TV information is provided by TheTVDB.com, but we are not endorsed or certified by TheTVDB.com or its affiliates.
+
+This product uses the TMDb API but is not endorsed or certified by TMDb.
 
 
 
