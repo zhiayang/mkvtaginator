@@ -140,13 +140,14 @@ namespace args
 	bool isOverridingMovieName();
 	bool isOverridingSeriesName();
 	bool isOverridingEpisodeName();
-	bool isDeletingExistingOutput();
-	bool isNoSmartReplaceCoverArt();
+	bool shouldDeleteExistingOutput();
+	bool disableSmartReplaceCoverArt();
 
 	bool isDryRun();
-	bool isStopOnError();
-	bool isNoAutoCover();
+	bool shouldRenameFiles();
+	bool shouldStopOnError();
 	bool isPreferEnglishTitle();
+	bool disableAutoCoverSearch();
 
 	std::vector<std::string> parseCmdLineOpts(int argc, char** argv);
 }
@@ -159,23 +160,26 @@ namespace driver
 	bool processOneFile(const std::filesystem::path& filepath);
 }
 
-struct SeriesMetadata
+struct GenericMetadata
 {
 	bool valid = false;
 
+	std::string id;
+	std::string normalTitle;
+	std::string canonicalTitle;
+};
+
+struct SeriesMetadata : GenericMetadata
+{
 	std::string name;
 	std::string airDate;
 
 	std::vector<std::string> genres;
 	std::vector<std::string> actors;
-
-	std::string id;
 };
 
-struct EpisodeMetadata
+struct EpisodeMetadata : GenericMetadata
 {
-	bool valid = false;
-
 	SeriesMetadata seriesMeta;
 
 	std::string name;
@@ -191,15 +195,10 @@ struct EpisodeMetadata
 	std::vector<std::string> artists;
 	std::vector<std::string> writers;
 	std::vector<std::string> directors;
-
-
-	std::string id;
 };
 
-struct MovieMetadata
+struct MovieMetadata : GenericMetadata
 {
-	bool valid = false;
-
 	std::string title;
 	std::string originalTitle;
 
@@ -218,8 +217,6 @@ struct MovieMetadata
 	std::vector<std::string> productionStudios;
 
 	int year = 0;
-
-	std::string id;
 };
 
 

@@ -7,6 +7,7 @@
 #define ARG_HELP                    "--help"
 #define ARG_COVER_IMAGE             "--cover"
 #define ARG_SERIES_ID               "--series"
+#define ARG_RENAME_FILES            "--rename"
 #define ARG_DRY_RUN                 "--dry-run"
 #define ARG_TVDB_API_KEY            "--tvdb-api"
 #define ARG_MOVIEDB_API_KEY         "--moviedb-api"
@@ -27,6 +28,10 @@ static void setupMap()
 {
 	helpList.push_back({ ARG_HELP,
 		"show this help"
+	});
+
+	helpList.push_back({ ARG_RENAME_FILES,
+		"rename the output file to the canonical format; for TV shows, 'SERIES S01E01 - EP TITLE'; for movies, 'TITLE (YEAR)'"
 	});
 
 	helpList.push_back({ ARG_COVER_IMAGE + std::string(" <path_to_image>"),
@@ -157,6 +162,7 @@ namespace args
 	static bool dryrun = false;
 	static bool noAutoCover = false;
 	static bool stopOnError = false;
+	static bool renameFiles = false;
 	static bool preferEnglishTitle = false;
 	static bool noSmartReplaceCoverArt = false;
 
@@ -210,27 +216,32 @@ namespace args
 		return dryrun;
 	}
 
+	bool shouldRenameFiles()
+	{
+		return renameFiles;
+	}
+
 	bool isPreferEnglishTitle()
 	{
 		return preferEnglishTitle;
 	}
 
-	bool isStopOnError()
+	bool shouldStopOnError()
 	{
 		return stopOnError;
 	}
 
-	bool isNoAutoCover()
+	bool disableAutoCoverSearch()
 	{
 		return noAutoCover;
 	}
 
-	bool isNoSmartReplaceCoverArt()
+	bool disableSmartReplaceCoverArt()
 	{
 		return noSmartReplaceCoverArt;
 	}
 
-	bool isDeletingExistingOutput()
+	bool shouldDeleteExistingOutput()
 	{
 		return deleteExistingOutput;
 	}
@@ -332,6 +343,11 @@ namespace args
 				{
 					// so uncivilised.
 					preferEnglishTitle = true;
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_RENAME_FILES))
+				{
+					renameFiles = true;
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_OUTPUT_FOLDER))

@@ -29,7 +29,7 @@ namespace driver
 	static void error(const std::string& fmt, Args&&... args)
 	{
 		util::error(fmt, args...);
-		if(args::isStopOnError())
+		if(args::shouldStopOnError())
 		{
 			util::error("stopping on first error");
 			exit(-1);
@@ -83,7 +83,7 @@ namespace driver
 
 				// if this is already a cover image, then just replace it -- we don't need to extract and
 				// reattach it. prevents cover art from spamming the file when you run mkvtaginator multiple times.
-				if(!args::isNoSmartReplaceCoverArt() && util::match(attachment.mime, "image/jpeg", "image/png")
+				if(!args::disableSmartReplaceCoverArt() && util::match(attachment.mime, "image/jpeg", "image/png")
 					&& util::match(attachment.name, "cover", "cover.jpg", "cover.jpeg", "cover.png"))
 				{
 					attachment.doNotReattach = true;
@@ -107,7 +107,7 @@ namespace driver
 
 
 	// { title, xmlfilename, xml }
-	static std::tuple<std::string, std::string, tinyxml2::XMLDocument*> getMetadataXML(const std::fs::path& filepath,
+	static std::tuple<GenericMetadata, std::string, tinyxml2::XMLDocument*> getMetadataXML(const std::fs::path& filepath,
 		std::vector<std::string>& coverArtNames)
 	{
 		// try tv series
@@ -118,10 +118,10 @@ namespace driver
 			if(!metadata.valid)
 			{
 				error("failed to find metadata");
-				return { "", "", nullptr };
+				return { GenericMetadata(), "", nullptr };
 			}
 
-			util::info("tv:  %s S%02dE%02d - %s", metadata.seriesMeta.name, metadata.seasonNumber,
+			util::info("tv: %s S%02dE%02d - %s", metadata.seriesMeta.name, metadata.seasonNumber,
 				metadata.episodeNumber, metadata.name);
 
 			auto xml = tags::serialiseMetadata(metadata);
@@ -133,10 +133,13 @@ namespace driver
 			coverArtNames.insert(coverArtNames.begin(), zpr::sprint("season%02d", metadata.seasonNumber));
 			coverArtNames.insert(coverArtNames.begin(), zpr::sprint("Season%02d", metadata.seasonNumber));
 
-			return {
-				zpr::sprint("%s S%02dE%02d%s", metadata.seriesMeta.name, metadata.seasonNumber,
-					metadata.episodeNumber, metadata.name.empty() ? "" : zpr::sprint(" - %s", metadata.name)),
+			metadata.normalTitle = zpr::sprint("%s S%02dE%02d%s", metadata.seriesMeta.name, metadata.seasonNumber,
+				metadata.episodeNumber, metadata.name.empty() ? "" : zpr::sprint(" - %s", metadata.name));
 
+			metadata.canonicalTitle = metadata.normalTitle;
+
+			return {
+				static_cast<GenericMetadata>(metadata),
 				zpr::sprint(".tmp-mkvinator-tags-s%02d-e%02d.xml", metadata.seasonNumber, metadata.episodeNumber),
 				xml
 			};
@@ -152,14 +155,17 @@ namespace driver
 			if(!metadata.valid)
 			{
 				error("failed to find metadata");
-				return { "", "", nullptr };
+				return { GenericMetadata(), "", nullptr };
 			}
 
-			util::info("mov: %s (%d)", metadata.title, metadata.year);
+			util::info("movie: %s (%d)", metadata.title, metadata.year);
+
+			metadata.normalTitle = zpr::sprint("%s", metadata.title);
+			metadata.canonicalTitle = zpr::sprint("%s (%d)", metadata.title, metadata.year);
 
 			auto xml = tags::serialiseMetadata(metadata);
 			return {
-				zpr::sprint("%s", metadata.title),
+				static_cast<GenericMetadata>(metadata),
 				zpr::sprint(".tmp-mkvinator-tags-movie-%s.xml", metadata.id),
 				xml
 			};
@@ -167,7 +173,7 @@ namespace driver
 
 	fail:
 		error("unparsable filename '%s'", filepath.filename().string());
-		return { "", "", nullptr };
+		return { GenericMetadata(), "", nullptr };
 	}
 
 	static void writeXML(const std::string& path, tinyxml2::XMLDocument* xml)
@@ -214,7 +220,7 @@ namespace driver
 			}
 		}
 
-		if(cover.empty() && !args::isNoAutoCover())
+		if(cover.empty() && !args::disableAutoCoverSearch())
 		{
 			// try relative to the file first.
 			for(const auto& x : tries)
@@ -230,7 +236,6 @@ namespace driver
 			{
 				for(const auto& x : tries)
 				{
-					zpr::println("try '%s'", x);
 					if(std::fs::exists(x))
 					{
 						cover = x;
@@ -290,7 +295,7 @@ namespace driver
 
 		if(!args::isDryRun())
 		{
-			if(std::fs::exists(outpath) && args::isDeletingExistingOutput())
+			if(std::fs::exists(outpath) && args::shouldDeleteExistingOutput())
 				std::fs::remove(outpath);
 
 			if(!std::fs::exists(outpath))
@@ -309,7 +314,7 @@ namespace driver
 			}
 		}
 
-		return zpr::sprint("\"%s\"", outpath.string());
+		return outpath.string();
 	}
 
 
@@ -319,6 +324,8 @@ namespace driver
 
 	bool processOneFile(const std::fs::path& filepath)
 	{
+		std::fs::path inputFile = filepath;
+
 		util::log("%s", filepath.filename().string()); util::indent_log();
 		defer(zpr::println(""));
 		defer(util::unindent_log());
@@ -330,7 +337,9 @@ namespace driver
 		auto firstAttachment = extractFirstAttachmentIfNecessary(filepath, filesToCleanup);
 
 		arguments.push_back(MKVPROPEDIT_PROGRAM);
-		arguments.push_back(zpr::sprint("\"%s\"", filepath.string()));
+		arguments.push_back(zpr::sprint("\"%s\"", inputFile.string()));
+
+
 
 		std::vector<std::string> coverArtNames = {
 			"cover",
@@ -338,7 +347,7 @@ namespace driver
 		};
 
 		// get the metadata
-		auto [ title, xmlname, xml ] = getMetadataXML(filepath, coverArtNames);
+		auto [ meta, xmlname, xml ] = getMetadataXML(filepath, coverArtNames);
 		{
 			if(!xml) return false;
 
@@ -353,7 +362,7 @@ namespace driver
 			arguments.push_back("--edit");
 			arguments.push_back("info");
 			arguments.push_back("--set");
-			arguments.push_back(zpr::sprint("\"title=%s\"", title));
+			arguments.push_back(zpr::sprint("\"title=%s\"", meta.normalTitle));
 		}
 
 
@@ -374,12 +383,15 @@ namespace driver
 		// copy the file over, and use that as the input to mkvpropedit instead.
 		if(auto out = args::getOutputFolder(); !out.empty())
 		{
-			// this will quote it for us.
 			if(auto outfile = createOutputFile(filepath, out); !outfile.empty())
-				arguments[1] = outfile;
-
+			{
+				arguments[1] = zpr::sprint("\"%s\"", outfile);
+				inputFile = outfile;
+			}
 			else
+			{
 				return false;
+			}
 		}
 
 
@@ -412,12 +424,31 @@ namespace driver
 				if(!sout.empty()) util::error("%s\n", sout);
 				if(!serr.empty()) util::error("%s\n", serr);
 
-				if(args::isStopOnError())
+				if(args::shouldStopOnError())
 					exit(-1);
 
 				return false;
 			}
 		}
+
+		// finally, after all this, we can rename the file.
+		if(args::shouldRenameFiles())
+		{
+			auto path = inputFile;
+			auto newpath = path.parent_path() / zpr::sprint("%s.mkv", meta.canonicalTitle);
+
+			if(!args::isDryRun())
+			{
+				util::log("renaming file");
+				std::fs::rename(path, newpath);
+			}
+			else
+			{
+				util::log("dryrun: rename '%s' -> '%s'", std::fs::relative(path).string(),
+					std::fs::relative(newpath).string());
+			}
+		}
+
 
 		for(const auto& f : filesToCleanup)
 		{
@@ -425,7 +456,7 @@ namespace driver
 				std::fs::remove(f);
 		}
 
-		util::log("done");
+		util::info("done");
 		return true;
 	}
 
@@ -474,7 +505,8 @@ namespace driver
 
 			if(auto out = args::getOutputFolder(); !out.empty())
 			{
-				if(std::fs::equivalent(filepath.parent_path(), std::fs::path(out)))
+				if(std::fs::equivalent(std::fs::canonical(filepath.parent_path()),
+					std::fs::canonical(std::fs::path(out))))
 				{
 					error("skipping input file overlapping with output folder");
 					continue;

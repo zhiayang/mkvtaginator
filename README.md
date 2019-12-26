@@ -7,7 +7,7 @@ For the list of command-line options, use `--help`.
 
 ### Short feature list
 
-1. Automatic filename parsing (of the format `SERIES_TITLE S04E14 - EPISODE_TITLE.mkv`, episode title is optional)
+1. Automatic filename parsing (tv: `SERIES_TITLE S04E14 - EPISODE_TITLE`, optional episode title; movies: `TITLE (YEAR)`)
 2. Metadata search; user-selection for ambiguous results (select-once-and-remember)
 3. Cover art embedding; automatic if standard image names detected in current folder
 4. Option for in-place editing, or copying to a new file
@@ -28,6 +28,9 @@ To enable "out-of-place" output (ie. the input files are copied, and the new cop
 `--output-folder <FOLDER_PATH>`; for any given input file, the output path must not coincide with the path of the input &mdash; since that
 would just overwrite it.
 
+To rename the output file into so-called "canonical" form, use `--rename`. This will rename TV shows into the form
+`SERIES_NAME S01E01 - EPISODE_TITLE.mkv` (the episode title is omitted if none exists), and movies into the form `TITLE (YEAR).mkv`. The
+extension will always be `mkv`.
 
 ### Cover art detection
 
