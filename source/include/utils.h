@@ -375,9 +375,11 @@ namespace util
 
 
 
-	template <typename T>
-	std::vector<std::vector<T>> combinations(std::vector<T> xs)
+	template <typename T, bool permute_inside>
+	std::vector<std::vector<T>> _permutations(std::vector<T> xs, size_t r)
 	{
+		if(r == 0) return { };
+
 		auto fact = [](size_t x) -> size_t {
 			size_t ret = 1;
 			while(x > 1)
@@ -387,40 +389,75 @@ namespace util
 		};
 
 		std::vector<std::vector<T>> ret;
-		ret.reserve(fact(xs.size()));
+		if(permute_inside)  ret.reserve(fact(xs.size()) / fact(xs.size() - r));
+		else                ret.reserve(fact(xs.size()) / (fact(r) * fact(xs.size() - r)));
 
-		do {
-			auto copy = xs;
-			std::sort(copy.begin(), copy.end());
 
-			ret.push_back(copy);
-		} while(std::next_permutation(xs.begin(), xs.end()));
+		std::function<void (size_t, size_t, size_t, std::vector<T>)> recurse;
 
-		ret.erase(std::unique(ret.begin(), ret.end()), ret.end());
+		recurse = [&recurse, &xs, &ret](size_t R, size_t r, size_t i, std::vector<T> cur) {
+			if(r == R)
+			{
+				if(permute_inside)
+				{
+					do {
+						ret.push_back(cur);
+					} while(std::next_permutation(cur.begin(), cur.end()));
+				}
+				else
+				{
+					std::sort(cur.begin(), cur.end());
+					ret.push_back(cur);
+				}
+			}
+			else
+			{
+				for(size_t k = i; k < xs.size(); k++)
+				{
+					cur.push_back(xs[k]);
+					recurse(R, r + 1, k + 1, cur);
+					cur.pop_back();
+				}
+			}
+		};
+
+		recurse(r, 0, 0, { });
 		return ret;
 	}
 
-
-
 	template <typename T>
-	std::vector<std::vector<T>> permutations(std::vector<T> xs)
+	std::vector<std::vector<T>> powerset(const std::vector<T>& xs)
 	{
-		auto fact = [](size_t x) -> size_t {
-			size_t ret = 1;
-			while(x > 1)
-				ret *= x, x -= 1;
-
-			return ret;
-		};
-
 		std::vector<std::vector<T>> ret;
-		ret.reserve(fact(xs.size()));
 
-		do {
-			ret.push_back(xs);
-		} while(std::next_permutation(xs.begin(), xs.end()));
+		// well... if there's more than 64 elements then gg
+		ret.reserve(2 << xs.size());
+
+		for(size_t i = 0; i < xs.size(); i++)
+		{
+			auto x = _permutations<T, false>(xs, i);
+			ret.insert(ret.end(), x.begin(), x.end());
+		}
 
 		return ret;
+	}
+
+	template <typename T>
+	std::vector<std::vector<T>> combinations(const std::vector<T>& xs, size_t r)
+	{
+		return _permutations<T, false>(xs, r);
+	}
+
+	template <typename T>
+	std::vector<std::vector<T>> permutations(const std::vector<T>& xs, size_t r)
+	{
+		return _permutations<T, true>(xs, r);
+	}
+
+	template <typename T>
+	std::vector<std::vector<T>> permutations(const std::vector<T>& xs)
+	{
+		return _permutations<T, true>(xs, xs.size());
 	}
 
 
@@ -504,11 +541,23 @@ namespace util
 		T&& operator() (T&& x) { return std::forward<T>(x); }
 	};
 
-	template <typename T>
-	std::string tostring(const T& x)
+	struct tostring
 	{
-		return std::to_string(x);
-	}
+		template <typename T>
+		std::string operator() (const T& x) { return std::to_string(x); }
+	};
+
+	struct pair_first
+	{
+		template <typename T, typename U>
+		T operator() (const std::pair<T, U>& x) { return x.first; }
+	};
+
+	struct pair_second
+	{
+		template <typename T, typename U>
+		U operator() (const std::pair<T, U>& x) { return x.second; }
+	};
 }
 
 

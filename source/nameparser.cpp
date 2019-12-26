@@ -22,10 +22,7 @@ namespace misc
 			// the whole thing is considered one match. we need the series name,
 			// season number and episode number, so 3+1 = 4.
 			if(sm.size() < 4)
-			{
-				util::error("unparsable filename '%s'", filename);
 				return { };
-			}
 
 			series = sm[1];
 			season = std::stoi(sm[2]);
@@ -44,17 +41,14 @@ namespace misc
 		std::string title;
 		int year = 0;
 
-		auto regex = std::regex("(.+?) (\\(\\d+\\))");
+		auto regex = std::regex("(.+?) \\((\\d+)\\)");
 		{
 			std::smatch sm;
 			std::regex_match(filename, sm, regex);
 
 			// the whole thing is considered one match. we need the title and year, so 2+1 = 3.
 			if(sm.size() < 3)
-			{
-				util::error("unparsable filename '%s'", filename);
 				return { };
-			}
 
 			title = sm[1];
 			year = std::stoi(sm[2]);

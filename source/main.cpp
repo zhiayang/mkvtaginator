@@ -28,6 +28,8 @@ int main(int argc, char** argv)
 		util::info("skipping search: using series id '%s'", args::getManualSeriesId());
 
 	tvdb::login();
+	moviedb::login();
+
 	driver::createOutputFolder();
 
 	auto paths = driver::collectFiles(files);

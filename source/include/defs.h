@@ -130,19 +130,23 @@ namespace util
 
 namespace args
 {
+	std::string getOutputFolder();
 	std::string getManualSeriesId();
 	std::string getManualCoverPath();
 
-	std::string getOutputFolder();
+	std::string getMovieDBApiKey();
 	std::string getTVDBApiKey();
 
+	bool isOverridingMovieName();
 	bool isOverridingSeriesName();
 	bool isOverridingEpisodeName();
 	bool isDeletingExistingOutput();
+	bool isNoSmartReplaceCoverArt();
 
 	bool isDryRun();
 	bool isStopOnError();
 	bool isNoAutoCover();
+	bool isPreferEnglishTitle();
 
 	std::vector<std::string> parseCmdLineOpts(int argc, char** argv);
 }
@@ -192,6 +196,33 @@ struct EpisodeMetadata
 	std::string id;
 };
 
+struct MovieMetadata
+{
+	bool valid = false;
+
+	std::string title;
+	std::string originalTitle;
+
+	std::string airDate;
+	std::string synopsis;
+
+	// { actor name, character played }
+	std::vector<std::pair<std::string, std::string>> cast;
+
+	std::vector<std::string> genres;
+	std::vector<std::string> writers;
+	std::vector<std::string> directors;
+	std::vector<std::string> producers;
+	std::vector<std::string> coproducers;
+	std::vector<std::string> execProducers;
+	std::vector<std::string> productionStudios;
+
+	int year = 0;
+
+	std::string id;
+};
+
+
 namespace misc
 {
 	// { series, season, episode, title }
@@ -203,6 +234,7 @@ namespace misc
 	struct Option
 	{
 		std::string title;
+		std::string altTitle;
 
 		struct Info
 		{
@@ -223,12 +255,18 @@ namespace misc
 namespace tvdb
 {
 	void login();
-
-	void setToken(const std::string& token);
 	std::string getToken();
 
 	EpisodeMetadata fetchEpisodeMetadata(const std::string& series, int season, int episode, const std::string& title,
 		const std::string& manualSeriesId);
+}
+
+namespace moviedb
+{
+	void login();
+	std::string getToken();
+
+	MovieMetadata fetchMovieMetadata(const std::string& title, int year, const std::string& manualId);
 }
 
 namespace cache
@@ -248,6 +286,7 @@ namespace tinyxml2
 
 namespace tags
 {
+	tinyxml2::XMLDocument* serialiseMetadata(const MovieMetadata& meta);
 	tinyxml2::XMLDocument* serialiseMetadata(const EpisodeMetadata& meta);
 }
 

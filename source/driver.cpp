@@ -43,6 +43,7 @@ namespace driver
 		std::string mime;
 
 		std::string extractedFile;
+		bool doNotReattach = false;
 	};
 
 	static TmpAttachment extractFirstAttachmentIfNecessary(const std::fs::path& filepath, std::vector<std::string>& cleanupList)
@@ -80,12 +81,22 @@ namespace driver
 				attachment.name = sm[3];
 				attachment.extractedFile = ".tmp-mkvinator-attachment-file";
 
-				// extract it.
-				tinyproclib::Process proc(zpr::sprint("%s -q \"%s\" attachments %d:%s", MKVEXTRACT_PROGRAM,
-					filepath.string(), attachment.id, attachment.extractedFile));
+				// if this is already a cover image, then just replace it -- we don't need to extract and
+				// reattach it. prevents cover art from spamming the file when you run mkvtaginator multiple times.
+				if(!args::isNoSmartReplaceCoverArt() && util::match(attachment.mime, "image/jpeg", "image/png")
+					&& util::match(attachment.name, "cover", "cover.jpg", "cover.jpeg", "cover.png"))
+				{
+					attachment.doNotReattach = true;
+				}
+				else
+				{
+					// extract it.
+					tinyproclib::Process proc(zpr::sprint("%s -q \"%s\" attachments %d:%s", MKVEXTRACT_PROGRAM,
+						filepath.string(), attachment.id, attachment.extractedFile));
 
-				proc.get_exit_status();
-				cleanupList.push_back(attachment.extractedFile);
+					proc.get_exit_status();
+					cleanupList.push_back(attachment.extractedFile);
+				}
 
 				break;
 			}
@@ -95,8 +106,8 @@ namespace driver
 	}
 
 
-
-	static std::pair<std::string, tinyxml2::XMLDocument*> getMetadataXML(const std::fs::path& filepath,
+	// { title, xmlfilename, xml }
+	static std::tuple<std::string, std::string, tinyxml2::XMLDocument*> getMetadataXML(const std::fs::path& filepath,
 		std::vector<std::string>& coverArtNames)
 	{
 		// try tv series
@@ -107,7 +118,7 @@ namespace driver
 			if(!metadata.valid)
 			{
 				error("failed to find metadata");
-				return { "", nullptr };
+				return { "", "", nullptr };
 			}
 
 			util::info("tv:  %s S%02dE%02d - %s", metadata.seriesMeta.name, metadata.seasonNumber,
@@ -115,14 +126,17 @@ namespace driver
 
 			auto xml = tags::serialiseMetadata(metadata);
 
-			coverArtNames.push_back("season");
-			coverArtNames.push_back("Season");
-			coverArtNames.push_back(zpr::sprint("season%d", metadata.seasonNumber));
-			coverArtNames.push_back(zpr::sprint("Season%d", metadata.seasonNumber));
-			coverArtNames.push_back(zpr::sprint("season%02d", metadata.seasonNumber));
-			coverArtNames.push_back(zpr::sprint("Season%02d", metadata.seasonNumber));
+			coverArtNames.insert(coverArtNames.begin(), "season");
+			coverArtNames.insert(coverArtNames.begin(), "Season");
+			coverArtNames.insert(coverArtNames.begin(), zpr::sprint("season%d", metadata.seasonNumber));
+			coverArtNames.insert(coverArtNames.begin(), zpr::sprint("Season%d", metadata.seasonNumber));
+			coverArtNames.insert(coverArtNames.begin(), zpr::sprint("season%02d", metadata.seasonNumber));
+			coverArtNames.insert(coverArtNames.begin(), zpr::sprint("Season%02d", metadata.seasonNumber));
 
 			return {
+				zpr::sprint("%s S%02dE%02d%s", metadata.seriesMeta.name, metadata.seasonNumber,
+					metadata.episodeNumber, metadata.name.empty() ? "" : zpr::sprint(" - %s", metadata.name)),
+
 				zpr::sprint(".tmp-mkvinator-tags-s%02d-e%02d.xml", metadata.seasonNumber, metadata.episodeNumber),
 				xml
 			};
@@ -130,8 +144,30 @@ namespace driver
 		else
 		{
 			// try movie
-			return { "", nullptr };
+			auto [ title, year ] = misc::parseMovie(filepath.stem().string());
+			if(title.empty())
+				goto fail;
+
+			auto metadata = moviedb::fetchMovieMetadata(title, year, args::getManualSeriesId());
+			if(!metadata.valid)
+			{
+				error("failed to find metadata");
+				return { "", "", nullptr };
+			}
+
+			util::info("mov: %s (%d)", metadata.title, metadata.year);
+
+			auto xml = tags::serialiseMetadata(metadata);
+			return {
+				zpr::sprint("%s", metadata.title),
+				zpr::sprint(".tmp-mkvinator-tags-movie-%s.xml", metadata.id),
+				xml
+			};
 		}
+
+	fail:
+		error("unparsable filename '%s'", filepath.filename().string());
+		return { "", "", nullptr };
 	}
 
 	static void writeXML(const std::string& path, tinyxml2::XMLDocument* xml)
@@ -194,6 +230,7 @@ namespace driver
 			{
 				for(const auto& x : tries)
 				{
+					zpr::println("try '%s'", x);
 					if(std::fs::exists(x))
 					{
 						cover = x;
@@ -212,7 +249,7 @@ namespace driver
 		std::vector<std::string> arguments;
 
 		arguments.push_back("--attachment-name");
-		arguments.push_back("\"cover\"");
+		arguments.push_back(zpr::sprint("\"cover.%s\"", cover.extension() == "png" ? "png" : "jpg"));
 		arguments.push_back("--attachment-mime-type");
 		arguments.push_back(zpr::sprint("\"image/%s\"", cover.extension() == "png" ? "png" : "jpeg"));
 
@@ -222,13 +259,20 @@ namespace driver
 			arguments.push_back("--replace-attachment");
 			arguments.push_back(zpr::sprint("%d:\"%s\"", firstAttachment.id, cover.string()));
 
-			// reattach the first one at the end.
-			arguments.push_back("--attachment-name");
-			arguments.push_back(zpr::sprint("\"%s\"", firstAttachment.name));
-			arguments.push_back("--attachment-mime-type");
-			arguments.push_back(zpr::sprint("\"%s\"", firstAttachment.mime));
-			arguments.push_back("--add-attachment");
-			arguments.push_back(zpr::sprint("\"%s\"", firstAttachment.extractedFile));
+			if(!firstAttachment.doNotReattach)
+			{
+				// reattach the first one at the end.
+				arguments.push_back("--attachment-name");
+				arguments.push_back(zpr::sprint("\"%s\"", firstAttachment.name));
+				arguments.push_back("--attachment-mime-type");
+				arguments.push_back(zpr::sprint("\"%s\"", firstAttachment.mime));
+				arguments.push_back("--add-attachment");
+				arguments.push_back(zpr::sprint("\"%s\"", firstAttachment.extractedFile));
+			}
+			else
+			{
+				util::log("replacing existing cover art in output file");
+			}
 		}
 		else
 		{
@@ -294,7 +338,7 @@ namespace driver
 		};
 
 		// get the metadata
-		auto [ xmlname, xml ] = getMetadataXML(filepath, coverArtNames);
+		auto [ title, xmlname, xml ] = getMetadataXML(filepath, coverArtNames);
 		{
 			if(!xml) return false;
 
@@ -304,6 +348,12 @@ namespace driver
 			arguments.push_back(zpr::sprint("all:\"%s\"", xmlname));
 
 			filesToCleanup.push_back(xmlname);
+
+			// set the overall title
+			arguments.push_back("--edit");
+			arguments.push_back("info");
+			arguments.push_back("--set");
+			arguments.push_back(zpr::sprint("\"title=%s\"", title));
 		}
 
 

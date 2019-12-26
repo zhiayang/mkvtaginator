@@ -9,10 +9,15 @@
 #define ARG_SERIES_ID               "--series"
 #define ARG_DRY_RUN                 "--dry-run"
 #define ARG_TVDB_API_KEY            "--tvdb-api"
+#define ARG_MOVIEDB_API_KEY         "--moviedb-api"
 #define ARG_OUTPUT_FOLDER           "--output-folder"
 #define ARG_NO_AUTO_COVER           "--no-auto-cover"
 #define ARG_STOP_ON_ERROR           "--stop-on-error"
+#define ARG_PREFER_ENGLISH_TITLE    "--prefer-eng-title"
+#define ARG_PREFER_ORIGINAL_TITLE   "--prefer-orig-title"
 #define ARG_DELETE_EXISTING_OUTPUT  "--delete-existing-output"
+#define ARG_NO_SMART_REPLACE_COVER  "--no-smart-replace-cover-art"
+#define ARG_OVERRIDE_MOVIE_NAME     "--override-movie-name"
 #define ARG_OVERRIDE_SERIES_NAME    "--override-series-name"
 #define ARG_OVERRIDE_EPISODE_NAME   "--override-episode-name"
 
@@ -20,6 +25,10 @@
 static std::vector<std::pair<std::string, std::string>> helpList;
 static void setupMap()
 {
+	helpList.push_back({ ARG_HELP,
+		"show this help"
+	});
+
 	helpList.push_back({ ARG_COVER_IMAGE + std::string(" <path_to_image>"),
 		"set the cover/poster image"
 	});
@@ -29,8 +38,12 @@ static void setupMap()
 	});
 
 	helpList.push_back({ ARG_OUTPUT_FOLDER + std::string(" <path_to_folder>"),
-		"specify the output folder to prevent overwriting input files; will be created if it doesn't exist."
+		"specify the output folder to prevent overwriting input files; will be created if it doesn't exist"
 		" (cannot be the same as the input)"
+	});
+
+	helpList.push_back({ ARG_OVERRIDE_MOVIE_NAME,
+		"use the movie title from the filename (instead of online metadata)"
 	});
 
 	helpList.push_back({ ARG_OVERRIDE_SERIES_NAME,
@@ -54,11 +67,27 @@ static void setupMap()
 	});
 
 	helpList.push_back({ ARG_DELETE_EXISTING_OUTPUT,
-		"when " ARG_OUTPUT_FOLDER " is specified, delete existing files instead of updating them in-place."
+		"when " ARG_OUTPUT_FOLDER " is specified, delete existing files instead of updating them in-place"
+	});
+
+	helpList.push_back({ ARG_NO_SMART_REPLACE_COVER,
+		"always reattach attachments, even those that are detected to be existing cover art attachments"
+	});
+
+	helpList.push_back({ ARG_PREFER_ORIGINAL_TITLE,
+		"prefer the original-language title (if available) rather than the anglicised one (for foreign content) -- this is the default"
+	});
+
+	helpList.push_back({ ARG_PREFER_ENGLISH_TITLE,
+		"prefer the anglicised (english-language) title for foreign content"
 	});
 
 	helpList.push_back({ ARG_TVDB_API_KEY + std::string(" <api_key>"),
 		"specify the api key for authenticating with the tvdb api"
+	});
+
+	helpList.push_back({ ARG_MOVIEDB_API_KEY + std::string(" <api_key>"),
+		"specify the api key for authenticating with the moviedb api"
 	});
 }
 
@@ -121,11 +150,17 @@ namespace args
 	static std::string coverPathName;
 	static std::string seriesId;
 	static std::string outputFolder;
+
 	static std::string tvdbApiKey;
+	static std::string moviedbApiKey;
 
 	static bool dryrun = false;
 	static bool noAutoCover = false;
 	static bool stopOnError = false;
+	static bool preferEnglishTitle = false;
+	static bool noSmartReplaceCoverArt = false;
+
+	static bool overrideMovieName = false;
 	static bool overrideSeriesName = false;
 	static bool overrideEpisodeName = false;
 	static bool deleteExistingOutput = false;
@@ -150,6 +185,16 @@ namespace args
 		return tvdbApiKey;
 	}
 
+	std::string getMovieDBApiKey()
+	{
+		return moviedbApiKey;
+	}
+
+	bool isOverridingMovieName()
+	{
+		return overrideMovieName;
+	}
+
 	bool isOverridingSeriesName()
 	{
 		return overrideSeriesName;
@@ -165,6 +210,11 @@ namespace args
 		return dryrun;
 	}
 
+	bool isPreferEnglishTitle()
+	{
+		return preferEnglishTitle;
+	}
+
 	bool isStopOnError()
 	{
 		return stopOnError;
@@ -173,6 +223,11 @@ namespace args
 	bool isNoAutoCover()
 	{
 		return noAutoCover;
+	}
+
+	bool isNoSmartReplaceCoverArt()
+	{
+		return noSmartReplaceCoverArt;
 	}
 
 	bool isDeletingExistingOutput()
@@ -214,7 +269,7 @@ namespace args
 						exit(-1);
 					}
 				}
-				if(!strcmp(argv[i], ARG_SERIES_ID))
+				else if(!strcmp(argv[i], ARG_SERIES_ID))
 				{
 					if(i != argc - 1)
 					{
@@ -228,6 +283,11 @@ namespace args
 						exit(-1);
 					}
 				}
+				else if(!strcmp(argv[i], ARG_OVERRIDE_MOVIE_NAME))
+				{
+					overrideMovieName = true;
+					continue;
+				}
 				else if(!strcmp(argv[i], ARG_OVERRIDE_SERIES_NAME))
 				{
 					overrideSeriesName = true;
@@ -236,6 +296,11 @@ namespace args
 				else if(!strcmp(argv[i], ARG_OVERRIDE_EPISODE_NAME))
 				{
 					overrideEpisodeName = true;
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_NO_SMART_REPLACE_COVER))
+				{
+					noSmartReplaceCoverArt = true;
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_DRY_RUN))
@@ -258,7 +323,18 @@ namespace args
 					deleteExistingOutput = true;
 					continue;
 				}
-				if(!strcmp(argv[i], ARG_OUTPUT_FOLDER))
+				else if(!strcmp(argv[i], ARG_PREFER_ORIGINAL_TITLE))
+				{
+					preferEnglishTitle = false;
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_PREFER_ENGLISH_TITLE))
+				{
+					// so uncivilised.
+					preferEnglishTitle = true;
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_OUTPUT_FOLDER))
 				{
 					if(i != argc - 1)
 					{
@@ -272,12 +348,26 @@ namespace args
 						exit(-1);
 					}
 				}
-				if(!strcmp(argv[i], ARG_TVDB_API_KEY))
+				else if(!strcmp(argv[i], ARG_TVDB_API_KEY))
 				{
 					if(i != argc - 1)
 					{
 						i++;
 						tvdbApiKey = argv[i];
+						continue;
+					}
+					else
+					{
+						util::error("error: expected string after '%s' option", argv[i]);
+						exit(-1);
+					}
+				}
+				else if(!strcmp(argv[i], ARG_MOVIEDB_API_KEY))
+				{
+					if(i != argc - 1)
+					{
+						i++;
+						moviedbApiKey = argv[i];
 						continue;
 					}
 					else

@@ -48,8 +48,8 @@ The preferred file is first (ie. it will prefer a file `cover.jpg` over `poster.
 
 ### Metadata sources
 
-Currently, the only supported metadata source is [theTVDB](https://thetvdb.com). You must create your own API key, and pass it to
-the program using `--tvdb-api <API_KEY>`. More will come.
+Currently, `mkvtaginator` uses [TheTVDB](https://thetvdb.com) and [TheMovieDB](https://themoviedb.org) as metadata sources. You must
+create your own API key, and pass it to the program using `--tvdb-api <API_KEY>` and `--moviedb-api <API_KEY>`.
 
 
 ### Caveats
@@ -59,12 +59,14 @@ if it's the first attachment in the file. For most files this is not an issue, b
 often be lots of font attachments. Adding the cover art at the end, after the fonts, has been known to prevent programs from seeing the
 cover art.
 
-Thus, this program will always ensure that the cover art attachment is the first attachment in the file. If there are no other attachments,
-it is straightforward. If not, then the first attachment is extracted to a temporary file, replaced with the cover art, and the temporary
-file is attached back to the end of the file as the last attachment.
+Thus, `mkvtaginator` will always ensure that the cover art attachment is the first attachment in the file. If there are no other
+attachments, it is straightforward. If not, then the first attachment is extracted to a temporary file, replaced with the cover art,
+and the temporary file is attached back to the end of the file as the last attachment.
 
-Note that `mkvtaginator` is not indempotent in terms of cover art; running it multiple times on the same file (with in-place editing) will
-cause lots of cover-art attachments to pile up in the file.
+If the first attachment (and only the first) is detected to be cover art (with mime type `image/jpeg` or `image/png`, and name
+`cover.{png,jpg}`), then it is simply replaced outright -- the old cover art will not be extracted and re-attached. This prevents
+cover art attachments from "accumulating" when `mkvtaginator` is run mutliple times on the same file. To disable this behaviour,
+use `--no-smart-replace-cover-art`.
 
 
 ### Contributing
@@ -90,9 +92,8 @@ These are:
 
 ### API attribution
 
-TV information is provided by TheTVDB.com, but we are not endorsed or certified by TheTVDB.com or its affiliates.
-
-This product uses the TMDb API but is not endorsed or certified by TMDb.
+TV information is provided by TheTVDB.com, but `mkvtaginator` is not endorsed or certified by TheTVDB.com or its affiliates. `mkvtaginator`
+also uses the TMDb API but is not endorsed or certified by TMDb.
 
 
 

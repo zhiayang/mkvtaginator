@@ -39,6 +39,7 @@ namespace tags
 			n = tag->InsertAfterChild(n, make_tag("SHOW", meta.seriesMeta.name));
 			n = tag->InsertAfterChild(n, make_tag("COLLECTION/TITLE", meta.seriesMeta.name));
 			n = tag->InsertAfterChild(n, make_tag("ACTOR", util::listToString(meta.actors, util::identity(), false)));
+			n = tag->InsertAfterChild(n, make_tag("ARTIST", util::listToString(meta.actors, util::identity(), false)));
 			n = tag->InsertAfterChild(n, make_tag("GENRE", util::listToString(meta.seriesMeta.genres, util::identity(), false)));
 			n = tag->InsertAfterChild(n, make_tag("CONTENT_TYPE", "TV Show"));
 		}
@@ -142,4 +143,86 @@ namespace tags
 
 		return xml;
 	}
+
+
+
+	tinyxml2::XMLDocument* serialiseMetadata(const MovieMetadata& meta)
+	{
+		auto xml = new tinyxml2::XMLDocument();
+		auto decl = xml->InsertFirstChild(xml->NewDeclaration());
+		auto dtd = xml->InsertAfterChild(decl, xml->NewUnknown("DOCTYPE Tags SYSTEM \"matroskatags.dtd\""));
+
+		auto tags = xml->InsertAfterChild(dtd, xml->NewElement("Tags"));
+
+		auto make_tag = [&xml](const std::string& name, const std::string& contents) -> tinyxml2::XMLElement* {
+			auto simple = xml->NewElement("Simple");
+			auto n = xml->NewElement("Name");
+			auto s = xml->NewElement("String");
+
+			n->SetText(name.c_str());
+			s->SetText(contents.c_str());
+
+			simple->InsertFirstChild(n);
+			simple->InsertAfterChild(n, s);
+
+			return simple;
+		};
+
+
+		auto tag = tags->InsertFirstChild(xml->NewElement("Tag"));
+
+		// for some reason, movies need the target type value...
+		auto n = tag->InsertFirstChild(xml->NewElement("Targets"));
+			n->InsertFirstChild(xml->NewElement("TargetTypeValue"));
+			n->FirstChild()->ToElement()->SetText(50);
+
+		{
+			n = tag->InsertAfterChild(n, make_tag("TITLE", meta.title));
+
+			// note: i think most programs (including MetaX and mediainfo) don't support this properly, and just read
+			// the last ACTOR tag. we'll stick with comma-separated names, and discard the character info for now ):
+
+			#if 0
+			for(const auto& actor : meta.cast)
+			{
+				auto [ name, played ] = actor;
+				n = tag->InsertAfterChild(n, make_tag("ACTOR", name));
+				if(!played.empty())
+					n->InsertEndChild(make_tag("CHARACTER", played));
+			}
+			#else
+			n = tag->InsertAfterChild(n, make_tag("ACTOR", util::listToString(meta.cast, util::pair_first(), false)));
+			n = tag->InsertAfterChild(n, make_tag("ARTIST", util::listToString(meta.cast, util::pair_first(), false)));
+			#endif
+
+			n = tag->InsertAfterChild(n, make_tag("GENRE", util::listToString(meta.genres, util::identity(), false)));
+			n = tag->InsertAfterChild(n, make_tag("CONTENT_TYPE", "Movie"));
+
+			n = tag->InsertAfterChild(n, make_tag("DIRECTOR", util::listToString(meta.directors, util::identity(), false)));
+			n = tag->InsertAfterChild(n, make_tag("WRITTEN_BY", util::listToString(meta.writers, util::identity(), false)));
+			n = tag->InsertAfterChild(n, make_tag("SCREENPLAY_BY", util::listToString(meta.writers, util::identity(), false)));
+
+			n = tag->InsertAfterChild(n, make_tag("PRODUCER", util::listToString(meta.producers, util::identity(), false)));
+			n = tag->InsertAfterChild(n, make_tag("COPRODUCER", util::listToString(meta.coproducers, util::identity(), false)));
+			n = tag->InsertAfterChild(n, make_tag("EXECUTIVE_PRODUCER", util::listToString(meta.execProducers,
+				util::identity(), false)));
+
+			n = tag->InsertAfterChild(n, make_tag("PRODUCTION_STUDIO", util::listToString(meta.productionStudios,
+				util::identity(), false)));
+
+			n = tag->InsertAfterChild(n, make_tag("DATE_RELEASE", meta.airDate));
+			n = tag->InsertAfterChild(n, make_tag("DATE_RELEASED", meta.airDate));
+
+			// set both the long and the short.
+			n = tag->InsertAfterChild(n, make_tag("SYNOPSIS", meta.synopsis));
+			n = tag->InsertAfterChild(n, make_tag("DESCRIPTION", meta.synopsis));
+		}
+
+		return xml;
+	}
 }
+
+
+
+
+

@@ -170,8 +170,9 @@ namespace misc
 		size_t size = (limit == 0 ? options.size() : std::min(limit, options.size()));
 		for(size_t i = first; i < size; i++)
 		{
-			zpr::println("%s  %s[%0*d]%s: %s%s%s", std::string(2 * util::get_log_indent(), ' '), COLOUR_GREEN_BOLD,
-				options.size() > 9 ? 2 : 1, i + 1, COLOUR_RESET, COLOUR_BLACK_BOLD, options[i].title, COLOUR_RESET);
+			zpr::println("%s  %s[%0*d]%s: %s%s%s%s", std::string(2 * util::get_log_indent(), ' '), COLOUR_GREEN_BOLD,
+				options.size() > 9 ? 2 : 1, i + 1, COLOUR_RESET, COLOUR_BLACK_BOLD, options[i].title, COLOUR_RESET,
+				options[i].altTitle.empty() ? "" : zpr::sprint(" (alt: %s%s%s)", COLOUR_BLACK_BOLD, options[i].altTitle, COLOUR_RESET));
 
 			auto pad = std::string(3 + (2 * util::get_log_indent()) + (options.size() > 9 ? 2 : 1), ' ');
 
@@ -190,7 +191,7 @@ namespace misc
 					if(!info.body.empty())
 					{
 						auto lm = pad;
-						auto rm = std::string(3, ' ');
+						auto rm = std::string(5, ' ');
 
 						pretty_print_text_block(info.body, lm.c_str(), rm.c_str(), /* max_lines: */ 3);
 					}
@@ -230,3 +231,12 @@ namespace misc
 		return static_cast<size_t>(x);
 	}
 }
+
+
+
+
+
+
+
+
+

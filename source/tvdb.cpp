@@ -76,18 +76,6 @@ namespace tvdb
 
 						opt.title = x.get("seriesName").get<std::string>();
 
-						if(auto aliases = x.get("aliases").get<pj::array>(); !aliases.empty())
-						{
-							misc::Option::Info info;
-
-							info.heading = "aliases:";
-							info.items = util::map(aliases, [](const pj::value& x) -> auto {
-								return x.get<std::string>();
-							});
-
-							opt.infos.push_back(info);
-						}
-
 						if(auto airdate = x.get("firstAired"); !airdate.is<pj::null>())
 						{
 							misc::Option::Info info;
@@ -106,6 +94,19 @@ namespace tvdb
 
 							opt.infos.push_back(info);
 						}
+
+						if(auto aliases = x.get("aliases").get<pj::array>(); !aliases.empty())
+						{
+							misc::Option::Info info;
+
+							info.heading = "aliases:";
+							info.items = util::map(aliases, [](const pj::value& x) -> auto {
+								return x.get<std::string>();
+							});
+
+							opt.infos.push_back(info);
+						}
+
 
 						if(auto overview = x.get("overview"); !overview.is<pj::null>())
 						{
@@ -131,6 +132,7 @@ namespace tvdb
 
 					// 'sel' here is 1-indexed.
 					sel -= 1;
+					zpr::println("");
 				}
 
 				seriesId = std::to_string(static_cast<size_t>(results[sel].get("id").get<double>()));
@@ -301,7 +303,7 @@ namespace tvdb
 
 
 	static std::string authToken;
-	void setToken(const std::string& token)
+	static void setToken(const std::string& token)
 	{
 		authToken = token;
 	}
