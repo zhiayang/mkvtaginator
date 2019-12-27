@@ -81,6 +81,9 @@ namespace mux
 			outstrm->codecpar->codec_tag = 0;
 
 			av_dict_copy(&outstrm->metadata, ctx->streams[idx]->metadata, 0);
+
+			if(outstrm->codecpar->codec_type == AVMEDIA_TYPE_SUBTITLE)
+				outstrm->disposition |= AV_DISPOSITION_DEFAULT;
 		}
 
 		// av_dump_format(outctx, 0, "url", 1);
