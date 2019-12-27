@@ -4,7 +4,7 @@
 
 #include "defs.h"
 
-namespace cache
+namespace tag::cache
 {
 	static std::unordered_map<std::string, std::string> seriesIdCache;
 

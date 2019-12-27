@@ -12,7 +12,7 @@ namespace pj = picojson;
 
 // https://matroska.org/technical/specs/tagging/example-video.html#episode
 
-namespace tvdb
+namespace tag::tvdb
 {
 	static constexpr const char* API_URL = "https://api.thetvdb.com";
 
@@ -29,7 +29,7 @@ namespace tvdb
 		return zpr::sprint("%d-%02d-%02d", y, m, d);
 	}
 
-	SeriesMetadata fetchSeriesMetadata(const std::string& name, const std::string& manualSeriesId)
+	static SeriesMetadata fetchSeriesMetadata(const std::string& name, const std::string& manualSeriesId)
 	{
 		SeriesMetadata ret;
 
@@ -123,16 +123,23 @@ namespace tvdb
 					// TODO: make this configurable
 					constexpr size_t limit = 3;
 
+					util::info("multiple matches:");
+
 					bool more = false;
 					size_t sel = misc::userChoice(options, &more, 0, limit);
 
 					// if they wanted more, print the rest.
-					if(more) sel = misc::userChoice(options, &more, limit);
-					if(sel == 0) goto fail;
+					if(more)
+					{
+						zpr::println("");
+						sel = misc::userChoice(options, &more, limit);
+					}
+
+					if(sel == 0)
+						goto fail;
 
 					// 'sel' here is 1-indexed.
 					sel -= 1;
-					zpr::println("");
 				}
 
 				seriesId = std::to_string(static_cast<size_t>(results[sel].get("id").get<double>()));
@@ -209,7 +216,7 @@ namespace tvdb
 			}
 
 
-			if(args::isOverridingSeriesName())
+			if(config::isOverridingSeriesName())
 				ret.name = name;
 		}
 
@@ -223,6 +230,9 @@ namespace tvdb
 	EpisodeMetadata fetchEpisodeMetadata(const std::string& series, int season, int episode, const std::string& title,
 		const std::string& manualSeriesId)
 	{
+		tvdb::login();
+
+
 		EpisodeMetadata ret;
 		ret.seriesMeta = fetchSeriesMetadata(series, manualSeriesId);
 		if(!ret.seriesMeta.valid)
@@ -284,7 +294,7 @@ namespace tvdb
 
 			ret.actors = ret.seriesMeta.actors;
 
-			if(args::isOverridingEpisodeName())
+			if(config::isOverridingEpisodeName())
 				ret.name = title;
 		}
 
@@ -315,10 +325,14 @@ namespace tvdb
 
 	void login()
 	{
-		auto key = args::getTVDBApiKey();
+		if(!authToken.empty())
+			return;
+
+		auto key = config::getTVDBApiKey();
 		if(key.empty())
 		{
-			util::error("error: missing api-key for theTVDB (use '--tvdb-api <api_key>', see '--help')");
+			util::error("%serror:%s missing api-key for theTVDB (use '--tvdb-api <api_key>', see '--help')",
+				COLOUR_RED_BOLD, COLOUR_RESET);
 			exit(-1);
 		}
 

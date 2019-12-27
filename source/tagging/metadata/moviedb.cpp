@@ -10,12 +10,14 @@
 
 namespace pj = picojson;
 
-namespace moviedb
+namespace tag::moviedb
 {
 	static constexpr const char* API_URL = "https://api.themoviedb.org/3";
 
 	MovieMetadata fetchMovieMetadata(const std::string& title, int year, const std::string& manualId)
 	{
+		moviedb::login();
+
 		MovieMetadata ret;
 
 		std::string movieId;
@@ -69,7 +71,7 @@ namespace moviedb
 						opt.altTitle = orig.get<std::string>();
 
 						// obviously we use the original name, cos we're cultured
-						if(!args::isPreferEnglishTitle())
+						if(!config::isPreferEnglishTitle())
 							std::swap(opt.title, opt.altTitle);
 					}
 
@@ -140,16 +142,23 @@ namespace moviedb
 				// TODO: make this configurable
 				constexpr size_t limit = 3;
 
+				util::info("multiple matches:");
+
 				bool more = false;
 				size_t sel = misc::userChoice(options, &more, 0, limit);
 
 				// if they wanted more, print the rest.
-				if(more) sel = misc::userChoice(options, &more, limit);
-				if(sel == 0) goto fail;
+				if(more)
+				{
+					zpr::println("");
+					sel = misc::userChoice(options, &more, limit);
+				}
+
+				if(sel == 0)
+					goto fail;
 
 				// 'sel' here is 1-indexed.
 				sel -= 1;
-				zpr::println("");
 			}
 
 			movieId = std::to_string(static_cast<size_t>(results[sel].get("id").get<double>()));
@@ -278,10 +287,10 @@ namespace moviedb
 			}
 
 			// ok. if we're overriding, then override:
-			if(args::isOverridingMovieName())
+			if(config::isOverridingMovieName())
 				ret.title = title;
 
-			else if(!args::isPreferEnglishTitle())
+			else if(!config::isPreferEnglishTitle())
 				std::swap(ret.title, ret.originalTitle);
 		}
 
@@ -308,10 +317,11 @@ namespace moviedb
 
 	void login()
 	{
-		auto key = args::getMovieDBApiKey();
+		auto key = config::getMovieDBApiKey();
 		if(key.empty())
 		{
-			util::error("error: missing api-key for TheMovieDB (use '--moviedb-api <api_key>', see '--help')");
+			util::error("%serror:%s missing api-key for TheMovieDB (use '--moviedb-api <api_key>', see '--help')",
+				COLOUR_RED_BOLD, COLOUR_RESET);
 			exit(-1);
 		}
 

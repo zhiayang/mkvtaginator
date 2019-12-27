@@ -35,6 +35,10 @@
 
 
 
+namespace tinyxml2
+{
+	class XMLDocument;
+}
 
 // https://stackoverflow.com/questions/28367913/how-to-stdhash-an-unordered-stdpair
 
@@ -47,6 +51,8 @@ void _hash_combine(std::size_t& seed, const T& key)
 
 namespace std
 {
+	namespace fs = filesystem;
+
 	template<typename T1, typename T2>
 	struct hash<std::pair<T1, T2>>
 	{
@@ -94,6 +100,17 @@ namespace util
 		printf(" %s*%s %s\n", COLOUR_BLUE_BOLD, COLOUR_RESET, zpr::sprint(fmt, args...).c_str());
 	}
 
+	template <typename... Args>
+	static void warn(const std::string& fmt, Args&&... args)
+	{
+		for(int i = 0; i < get_log_indent(); i++)
+			printf("  ");
+
+		printf(" %s*%s %s\n", COLOUR_YELLOW_BOLD, COLOUR_RESET, zpr::sprint(fmt, args...).c_str());
+	}
+
+
+
 	size_t getTerminalWidth();
 	size_t displayedTextLength(const std::string_view& sv);
 	std::wstring corruptUTF8ToWChar(const std::string& s);
@@ -126,32 +143,110 @@ namespace util
 
 		return ret;
 	}
+
+	static inline std::string trim(const std::string& s)
+	{
+		auto ltrim = [](std::string_view& s) -> std::string_view& {
+			auto i = s.find_first_not_of(" \t\n\r\f\v");
+			if(i != -1) s.remove_prefix(i);
+
+			return s;
+		};
+
+		auto rtrim = [](std::string_view& s) -> std::string_view& {
+			auto i = s.find_last_not_of(" \t\n\r\f\v");
+			if(i != -1) s = s.substr(0, i + 1);
+
+			return s;
+		};
+
+		std::string_view sv = s;
+		return std::string(ltrim(rtrim(sv)));
+	}
+
+	// 1h 3m 14s
+	std::string prettyPrintTime(uint64_t ns, bool ms = true);
+
+	// 01:03:14.51
+	std::string uglyPrintTime(uint64_t ns, bool ms = true);
+
+	std::string getEnvironmentVar(const std::string& name);
 }
 
 namespace args
 {
+	std::vector<std::string> parseCmdLineOpts(int argc, char** argv);
+}
+
+namespace config
+{
+	void readConfig();
+
+
 	std::string getOutputFolder();
 	std::string getManualSeriesId();
 	std::string getManualCoverPath();
 
 	std::string getMovieDBApiKey();
 	std::string getTVDBApiKey();
+	std::string getConfigPath();
+
+	std::vector<std::string> getAudioLangs();
+	std::vector<std::string> getSubtitleLangs();
 
 	bool isOverridingMovieName();
 	bool isOverridingSeriesName();
 	bool isOverridingEpisodeName();
 	bool shouldDeleteExistingOutput();
 	bool disableSmartReplaceCoverArt();
+	bool shouldRenameWithoutEpisodeTitle();
+
+	bool isPreferSDHSubs();
+	bool isPreferTextSubs();
+	bool isPreferOneStream();
+	bool isPreferSignSongSubs();
 
 	bool isDryRun();
+	bool disableProgress();
 	bool shouldRenameFiles();
 	bool shouldStopOnError();
 	bool isPreferEnglishTitle();
 	bool disableAutoCoverSearch();
 
-	std::vector<std::string> parseCmdLineOpts(int argc, char** argv);
-}
 
+	bool isMuxing();
+	bool isTagging();
+
+
+	void setAudioLangs(const std::vector<std::string>& xs);
+	void setSubtitleLangs(const std::vector<std::string>& xs);
+
+	void setPreferSDHSubs(bool x);
+	void setPreferTextSubs(bool x);
+	void setPreferOneStream(bool x);
+	void setPreferSignSongSubs(bool x);
+
+	void setOutputFolder(const std::string& x);
+	void setManualSeriesId(const std::string& x);
+	void setManualCoverPath(const std::string& x);
+	void setMovieDBApiKey(const std::string& x);
+	void setTVDBApiKey(const std::string& x);
+	void setConfigPath(const std::string& x);
+	void setIsOverridingMovieName(bool x);
+	void setIsOverridingSeriesName(bool x);
+	void setIsOverridingEpisodeName(bool x);
+	void setShouldDeleteExistingOutput(bool x);
+	void setDisableSmartReplaceCoverArt(bool x);
+	void setShouldRenameWithoutEpisodeTitle(bool x);
+	void setIsDryRun(bool x);
+	void setIsMuxing(bool x);
+	void setIsTagging(bool x);
+	void setDisableProgress(bool x);
+	void setShouldRenameFiles(bool x);
+	void setShouldStopOnError(bool x);
+	void setIsPreferEnglishTitle(bool x);
+	void setDisableAutoCoverSearch(bool x);
+}
 
 namespace driver
 {
@@ -160,78 +255,13 @@ namespace driver
 	bool processOneFile(const std::filesystem::path& filepath);
 }
 
-struct GenericMetadata
-{
-	bool valid = false;
-
-	std::string id;
-	std::string normalTitle;
-	std::string canonicalTitle;
-};
-
-struct SeriesMetadata : GenericMetadata
-{
-	std::string name;
-	std::string airDate;
-
-	std::vector<std::string> genres;
-	std::vector<std::string> actors;
-};
-
-struct EpisodeMetadata : GenericMetadata
-{
-	SeriesMetadata seriesMeta;
-
-	std::string name;
-	std::string airDate;
-
-	int seasonNumber = 0;
-	int episodeNumber = 0;
-
-	std::string synopsis;
-	std::string description;
-
-	std::vector<std::string> actors;
-	std::vector<std::string> artists;
-	std::vector<std::string> writers;
-	std::vector<std::string> directors;
-};
-
-struct MovieMetadata : GenericMetadata
-{
-	std::string title;
-	std::string originalTitle;
-
-	std::string airDate;
-	std::string synopsis;
-
-	// { actor name, character played }
-	std::vector<std::pair<std::string, std::string>> cast;
-
-	std::vector<std::string> genres;
-	std::vector<std::string> writers;
-	std::vector<std::string> directors;
-	std::vector<std::string> producers;
-	std::vector<std::string> coproducers;
-	std::vector<std::string> execProducers;
-	std::vector<std::string> productionStudios;
-
-	int year = 0;
-};
-
-
 namespace misc
 {
-	// { series, season, episode, title }
-	std::tuple<std::string, int, int, std::string> parseTVShow(const std::string& filename);
-
-	// { name, year }
-	std::tuple<std::string, int> parseMovie(const std::string& filename);
-
 	struct Option
 	{
 		std::string title;
 		std::string altTitle;
+		std::string subTitle;
 
 		struct Info
 		{
@@ -247,42 +277,119 @@ namespace misc
 	};
 
 	size_t userChoice(const std::vector<Option>& options, bool* showmore = 0, size_t first = 0, size_t limit = 0);
+	std::vector<size_t> userChoiceMultiple(const std::vector<Option>& options);
 }
 
-namespace tvdb
-{
-	void login();
-	std::string getToken();
 
-	EpisodeMetadata fetchEpisodeMetadata(const std::string& series, int season, int episode, const std::string& title,
-		const std::string& manualSeriesId);
+
+
+namespace mux
+{
+	bool muxOneFile(std::fs::path& filepath);
 }
 
-namespace moviedb
+
+
+
+
+
+namespace tag
 {
-	void login();
-	std::string getToken();
+	struct GenericMetadata
+	{
+		bool valid = false;
 
-	MovieMetadata fetchMovieMetadata(const std::string& title, int year, const std::string& manualId);
-}
+		std::string id;
+		std::string normalTitle;
+		std::string canonicalTitle;
+		std::string episodeTitle;
+	};
 
-namespace cache
-{
-	std::string getSeriesId(const std::string& name);
-	void setSeriesId(const std::string& name, const std::string& id);
+	struct SeriesMetadata : GenericMetadata
+	{
+		std::string name;
+		std::string airDate;
 
-	SeriesMetadata getSeriesMeta(const std::string& id);
-	void addSeriesMeta(const std::string& id, const SeriesMetadata& meta);
-	bool haveSeriesMeta(const std::string& id);
-}
+		std::vector<std::string> genres;
+		std::vector<std::string> actors;
+	};
 
-namespace tinyxml2
-{
-	class XMLDocument;
-}
+	struct EpisodeMetadata : GenericMetadata
+	{
+		SeriesMetadata seriesMeta;
 
-namespace tags
-{
+		std::string name;
+		std::string airDate;
+
+		int seasonNumber = 0;
+		int episodeNumber = 0;
+
+		std::string synopsis;
+		std::string description;
+
+		std::vector<std::string> actors;
+		std::vector<std::string> artists;
+		std::vector<std::string> writers;
+		std::vector<std::string> directors;
+	};
+
+	struct MovieMetadata : GenericMetadata
+	{
+		std::string title;
+		std::string originalTitle;
+
+		std::string airDate;
+		std::string synopsis;
+
+		// { actor name, character played }
+		std::vector<std::pair<std::string, std::string>> cast;
+
+		std::vector<std::string> genres;
+		std::vector<std::string> writers;
+		std::vector<std::string> directors;
+		std::vector<std::string> producers;
+		std::vector<std::string> coproducers;
+		std::vector<std::string> execProducers;
+		std::vector<std::string> productionStudios;
+
+		int year = 0;
+	};
+
+	namespace tvdb
+	{
+		void login();
+		std::string getToken();
+
+		EpisodeMetadata fetchEpisodeMetadata(const std::string& series, int season, int episode, const std::string& title,
+			const std::string& manualSeriesId);
+	}
+
+	namespace moviedb
+	{
+		void login();
+		std::string getToken();
+
+		MovieMetadata fetchMovieMetadata(const std::string& title, int year, const std::string& manualId);
+	}
+
+	namespace cache
+	{
+		std::string getSeriesId(const std::string& name);
+		void setSeriesId(const std::string& name, const std::string& id);
+
+		SeriesMetadata getSeriesMeta(const std::string& id);
+		void addSeriesMeta(const std::string& id, const SeriesMetadata& meta);
+		bool haveSeriesMeta(const std::string& id);
+	}
+
+	// { series, season, episode, title }
+	std::tuple<std::string, int, int, std::string> parseTVShow(const std::string& filename);
+
+	// { name, year }
+	std::tuple<std::string, int> parseMovie(const std::string& filename);
+
+
+	bool tagOneFile(const std::filesystem::path& filepath);
 	tinyxml2::XMLDocument* serialiseMetadata(const MovieMetadata& meta);
 	tinyxml2::XMLDocument* serialiseMetadata(const EpisodeMetadata& meta);
 }

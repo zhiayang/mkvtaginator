@@ -17,7 +17,7 @@ OUTPUT          := build/mkvtaginator
 CC              ?= "clang"
 CXX             ?= "clang++"
 
-CXXSRC          := $(shell find source -iname "*.cpp")
+CXXSRC          := $(shell find source external -iname "*.cpp")
 CXXOBJ          := $(CXXSRC:.cpp=.cpp.o)
 CXXDEPS         := $(CXXSRC:.cpp=.cpp.d)
 
@@ -26,7 +26,7 @@ NUMFILES        := $$(($(words $(CXXSRC))))
 DEFINES         := -D__USE_MINGW_ANSI_STDIO=1
 SANITISE        :=
 
-CXXFLAGS        += -std=c++17 -fvisibility=hidden -O2 -g -c -Wall -fno-omit-frame-pointer $(SANITISE) $(DEFINES)
+CXXFLAGS        += -std=c++17 -fvisibility=hidden -O0 -g -c -Wall -fno-omit-frame-pointer $(SANITISE) $(DEFINES)
 LDFLAGS         += $(SANITISE) -fvisibility=hidden
 
 PRECOMP_HDRS    := source/include/precompile.h
@@ -38,9 +38,13 @@ COMPILER_IDENT  := $(shell $(CC) --version | head -n 1)
 CURL_CFLAGS     := $(shell pkg-config --cflags libcurl)
 CURL_LDFLAGS    := $(shell pkg-config --libs libcurl)
 
+LIBAV_CFLAGS    := $(shell pkg-config --cflags libavformat libavutil)
+LIBAV_LDFLAGS   := $(shell pkg-config --libs libavformat libavutil)
 
-CXXFLAGS += $(CURL_CFLAGS)
-LDFLAGS  += $(CURL_LDFLAGS)
+
+
+CXXFLAGS += $(CURL_CFLAGS) $(LIBAV_CFLAGS)
+LDFLAGS  += $(CURL_LDFLAGS) $(LIBAV_LDFLAGS)
 
 .DEFAULT_GOAL = all
 -include $(CXXDEPS)
@@ -59,7 +63,7 @@ $(OUTPUT): $(PRECOMP_GCH) $(CXXOBJ)
 %.cpp.o: %.cpp
 	@$(eval DONEFILES += "CPP")
 	@printf "# compiling [$(words $(DONEFILES))/$(NUMFILES)] $<\n"
-	@$(CXX) $(CXXFLAGS) $(WARNINGS) -include source/include/precompile.h -Isource/include -MMD -MP -o $@ $<
+	@$(CXX) $(CXXFLAGS) $(WARNINGS) -include source/include/precompile.h -Isource/include -Iexternal/include -MMD -MP -o $@ $<
 
 %.h.gch: %.h
 	@printf "# precompiling header $<\n"

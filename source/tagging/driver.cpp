@@ -11,15 +11,10 @@
 namespace pj = picojson;
 
 #include "tinyxml2.h"
-#include "tinyprocesslib/tinyprocess.h"
+#include "tinyprocess.h"
 
 
-namespace std
-{
-	namespace fs = filesystem;
-}
-
-namespace driver
+namespace tag
 {
 	static constexpr const char* MKVMERGE_PROGRAM       = "mkvmerge";
 	static constexpr const char* MKVEXTRACT_PROGRAM     = "mkvextract";
@@ -29,7 +24,7 @@ namespace driver
 	static void error(const std::string& fmt, Args&&... args)
 	{
 		util::error(fmt, args...);
-		if(args::shouldStopOnError())
+		if(config::shouldStopOnError())
 		{
 			util::error("stopping on first error");
 			exit(-1);
@@ -83,7 +78,7 @@ namespace driver
 
 				// if this is already a cover image, then just replace it -- we don't need to extract and
 				// reattach it. prevents cover art from spamming the file when you run mkvtaginator multiple times.
-				if(!args::disableSmartReplaceCoverArt() && util::match(attachment.mime, "image/jpeg", "image/png")
+				if(!config::disableSmartReplaceCoverArt() && util::match(attachment.mime, "image/jpeg", "image/png")
 					&& util::match(attachment.name, "cover", "cover.jpg", "cover.jpeg", "cover.png"))
 				{
 					attachment.doNotReattach = true;
@@ -111,10 +106,10 @@ namespace driver
 		std::vector<std::string>& coverArtNames)
 	{
 		// try tv series
-		auto [ series, season, episode, title ] = misc::parseTVShow(filepath.stem().string());
+		auto [ series, season, episode, title ] = parseTVShow(filepath.stem().string());
 		if(!series.empty())
 		{
-			auto metadata = tvdb::fetchEpisodeMetadata(series, season, episode, title, args::getManualSeriesId());
+			auto metadata = tvdb::fetchEpisodeMetadata(series, season, episode, title, config::getManualSeriesId());
 			if(!metadata.valid)
 			{
 				error("failed to find metadata");
@@ -124,7 +119,7 @@ namespace driver
 			util::info("tv: %s S%02dE%02d - %s", metadata.seriesMeta.name, metadata.seasonNumber,
 				metadata.episodeNumber, metadata.name);
 
-			auto xml = tags::serialiseMetadata(metadata);
+			auto xml = serialiseMetadata(metadata);
 
 			coverArtNames.insert(coverArtNames.begin(), "season");
 			coverArtNames.insert(coverArtNames.begin(), "Season");
@@ -136,7 +131,10 @@ namespace driver
 			metadata.normalTitle = zpr::sprint("%s S%02dE%02d%s", metadata.seriesMeta.name, metadata.seasonNumber,
 				metadata.episodeNumber, metadata.name.empty() ? "" : zpr::sprint(" - %s", metadata.name));
 
-			metadata.canonicalTitle = metadata.normalTitle;
+			metadata.canonicalTitle = zpr::sprint("%s S%02dE%02d", metadata.seriesMeta.name, metadata.seasonNumber,
+				metadata.episodeNumber);
+
+			metadata.episodeTitle = metadata.name;
 
 			return {
 				static_cast<GenericMetadata>(metadata),
@@ -147,11 +145,11 @@ namespace driver
 		else
 		{
 			// try movie
-			auto [ title, year ] = misc::parseMovie(filepath.stem().string());
+			auto [ title, year ] = parseMovie(filepath.stem().string());
 			if(title.empty())
 				goto fail;
 
-			auto metadata = moviedb::fetchMovieMetadata(title, year, args::getManualSeriesId());
+			auto metadata = moviedb::fetchMovieMetadata(title, year, config::getManualSeriesId());
 			if(!metadata.valid)
 			{
 				error("failed to find metadata");
@@ -163,7 +161,7 @@ namespace driver
 			metadata.normalTitle = zpr::sprint("%s", metadata.title);
 			metadata.canonicalTitle = zpr::sprint("%s (%d)", metadata.title, metadata.year);
 
-			auto xml = tags::serialiseMetadata(metadata);
+			auto xml = serialiseMetadata(metadata);
 			return {
 				static_cast<GenericMetadata>(metadata),
 				zpr::sprint(".tmp-mkvinator-tags-movie-%s.xml", metadata.id),
@@ -199,7 +197,7 @@ namespace driver
 		});
 
 		std::fs::path cover;
-		if(auto c = args::getManualCoverPath(); !c.empty())
+		if(auto c = config::getManualCoverPath(); !c.empty())
 		{
 			// prefer the cover art relative to the file path.
 			if(std::fs::exists(filepath.parent_path() / c))
@@ -220,7 +218,7 @@ namespace driver
 			}
 		}
 
-		if(cover.empty() && !args::disableAutoCoverSearch())
+		if(cover.empty() && !config::disableAutoCoverSearch())
 		{
 			// try relative to the file first.
 			for(const auto& x : tries)
@@ -293,9 +291,9 @@ namespace driver
 	{
 		auto outpath = std::fs::canonical(std::fs::path(outname)) / filepath.filename();
 
-		if(!args::isDryRun())
+		if(!config::isDryRun())
 		{
-			if(std::fs::exists(outpath) && args::shouldDeleteExistingOutput())
+			if(std::fs::exists(outpath) && config::shouldDeleteExistingOutput())
 				std::fs::remove(outpath);
 
 			if(!std::fs::exists(outpath))
@@ -304,7 +302,8 @@ namespace driver
 				auto x = std::fs::copy_file(filepath, outpath);
 				if(!x)
 				{
-					error("error: failed to copy file to '%s'", outpath.string());
+					error("%serror:%s failed to copy file to '%s'", outpath.string(),
+						COLOUR_RED_BOLD, COLOUR_RESET);
 					return "";
 				}
 			}
@@ -322,13 +321,10 @@ namespace driver
 
 
 
-	bool processOneFile(const std::fs::path& filepath)
+	bool tagOneFile(const std::fs::path& filepath)
 	{
 		std::fs::path inputFile = filepath;
 
-		util::log("%s", filepath.filename().string()); util::indent_log();
-		defer(zpr::println(""));
-		defer(util::unindent_log());
 
 
 		std::vector<std::string> arguments;
@@ -381,7 +377,7 @@ namespace driver
 
 		// if we specified an alternative output path,
 		// copy the file over, and use that as the input to mkvpropedit instead.
-		if(auto out = args::getOutputFolder(); !out.empty())
+		if(auto out = config::getOutputFolder(); !out.empty())
 		{
 			if(auto outfile = createOutputFile(filepath, out); !outfile.empty())
 			{
@@ -397,7 +393,7 @@ namespace driver
 
 
 		auto cmdline = util::listToString(arguments, util::identity(), false, " ");
-		if(args::isDryRun())
+		if(config::isDryRun())
 		{
 			util::log("dryrun: cmdline would have been:");
 			util::info(cmdline);
@@ -424,7 +420,7 @@ namespace driver
 				if(!sout.empty()) util::error("%s\n", sout);
 				if(!serr.empty()) util::error("%s\n", serr);
 
-				if(args::shouldStopOnError())
+				if(config::shouldStopOnError())
 					exit(-1);
 
 				return false;
@@ -432,12 +428,17 @@ namespace driver
 		}
 
 		// finally, after all this, we can rename the file.
-		if(args::shouldRenameFiles())
+		if(config::shouldRenameFiles())
 		{
 			auto path = inputFile;
-			auto newpath = path.parent_path() / zpr::sprint("%s.mkv", meta.canonicalTitle);
 
-			if(!args::isDryRun())
+			auto newname = meta.canonicalTitle;
+			if(!config::shouldRenameWithoutEpisodeTitle() && !meta.episodeTitle.empty())
+				newname += zpr::sprint(" - %s", meta.episodeTitle);
+
+			auto newpath = path.parent_path() / zpr::sprint("%s.mkv", newname);
+
+			if(!config::isDryRun())
 			{
 				util::log("renaming file");
 				std::fs::rename(path, newpath);
@@ -458,65 +459,6 @@ namespace driver
 
 		util::info("done");
 		return true;
-	}
-
-
-
-	void createOutputFolder()
-	{
-		if(auto out = args::getOutputFolder(); !out.empty())
-		{
-			auto path = std::fs::path(out);
-			if(!std::fs::exists(path))
-			{
-				bool res = std::fs::create_directory(path);
-				if(res) { util::info("creating output folder '%s'", out); }
-				else    { util::error("failed to create output folder '%s'", out); exit(-1); }
-			}
-			else if(!std::fs::is_directory(path))
-			{
-				util::error("error: specified output path '%s' is not a directory", out);
-				exit(-1);
-			}
-		}
-	}
-
-
-
-	std::vector<std::fs::path> collectFiles(const std::vector<std::string>& files)
-	{
-		std::vector<std::fs::path> ret;
-
-		for(auto file : files)
-		{
-			auto filepath = std::fs::path(file);
-
-			if(!std::fs::exists(filepath))
-			{
-				error("skipping nonexistent file '%s'", filepath.string());
-				continue;
-			}
-			else if(filepath.extension() != ".mkv")
-			{
-				error("ignoring non-mkv file (extension was '%s')",
-					filepath.extension().string());
-				continue;
-			}
-
-			if(auto out = args::getOutputFolder(); !out.empty())
-			{
-				if(std::fs::equivalent(std::fs::canonical(filepath.parent_path()),
-					std::fs::canonical(std::fs::path(out))))
-				{
-					error("skipping input file overlapping with output folder");
-					continue;
-				}
-			}
-
-			ret.push_back(filepath);
-		}
-
-		return ret;
 	}
 }
 

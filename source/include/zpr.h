@@ -337,16 +337,6 @@ namespace zpr
 			// else if(args.specifier == 'o')                          base = 8;
 			// else if(args.specifier == 'b')                          base = 2;
 
-			// handle negative values ourselves btw, due to padding
-			bool is_neg = false;
-
-			if constexpr (!std::is_enum_v<T> && std::is_signed_v<T>)
-			{
-				is_neg = (x < 0);
-
-				if(is_neg)
-					x = -x;
-			}
 
 			std::string digits;
 			{
@@ -403,8 +393,7 @@ namespace zpr
 			}
 
 			std::string prefix;
-			if(is_neg)                              prefix += "-";
-			else if(args.prepend_plus_if_positive)  prefix += "+";
+			if(args.prepend_plus_if_positive)       prefix += "+";
 			else if(args.prepend_blank_if_positive) prefix += " ";
 
 			// prepend 0x or 0b or 0o for alternate.

@@ -1,0 +1,100 @@
+{
+	"options": {
+
+		// your API key for The TVDB
+		// default: unset
+		"tvdb-api-key":                 "",
+
+		// your API key for The MovieDB
+		// default: unset
+		"moviedb-api-key":              "",
+
+		// the output folder.
+		// default: unset
+		"output-folder":                "",
+
+		// show progress when muxing.
+		// default: TRUE
+		"show-progress":                true,
+
+		// stop all processing on the first error.
+		// default: FALSE
+		"stop-on-first-error":          false,
+
+		// prefer english/romanised titles
+		// default: FALSE
+		"prefer-english-title":         false,
+
+		// prefer titles in the original language
+		// default: TRUE
+		"prefer-original-title":        true,
+
+		// automatically detect cover-art files in the current directory
+		// default: TRUE
+		"automatic-cover-search":       true,
+
+		// delete existing output files, instead of editing their tags
+		// default: FALSE
+		"delete-existing-output":       false,
+
+		// detect existing cover-art in input, and do not reattach them to the output
+		// default: TRUE
+		"smart-cover-art-replacement":  true,
+
+		// automatically rename files to the standard form after tagging
+		// default: FALSE
+		"automatic-rename-files":       false,
+
+		// include the episode title in renamed files (for tv shows only)
+		// default: TRUE
+		"rename-with-episode-title":    true,
+
+		// override the name of the movie using the filename, instead of using metadata
+		// default: FALSE
+		"override-movie-name":          false,
+
+		// override the name of the tv series using the filename, instead of using metadata
+		// default: FALSE
+		"override-series-name":         false,
+
+		// override the episode title using the filename, instead of using metadata
+		// default: FALSE
+		"override-episode-name":        false,
+
+		// the list of preferred languages for audio tracks, with the highest priority first.
+		// default: [ eng ]
+		"preferred-audio-languages": [
+			"eng"
+		],
+
+		// the list of preferred languages for subtitles, with the highest priority first.
+		// default: [ eng ]
+		"preferred-subtitle-languages": [
+			"eng"
+		],
+
+		// prefer SDH subtitles if available
+		// default: FALSE
+		"prefer-sdh-subtitles":         false,
+
+		// prefer Signs/Songs subtitles over full subtitles
+		// default: FALSE
+		"prefer-signs-and-songs-subs":  false,
+
+		// prefer subtitles in text format (srt/ass) over image formats
+		// default: TRUE
+		"prefer-text-subtitles":        true,
+
+		// prefer to only have one of each kind of stream (video, audio, subtitle) in the output.
+		// attachments (fonts, cover art) are unaffected by this setting
+		"prefer-one-stream":            true
+	}
+}
+
+
+
+
+
+
+
+

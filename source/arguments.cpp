@@ -5,22 +5,32 @@
 #include "defs.h"
 
 #define ARG_HELP                    "--help"
+#define ARG_MUX                     "--mux"
+#define ARG_TAG                     "--tag"
 #define ARG_COVER_IMAGE             "--cover"
+#define ARG_CONFIG_PATH             "--config"
 #define ARG_SERIES_ID               "--series"
 #define ARG_RENAME_FILES            "--rename"
 #define ARG_DRY_RUN                 "--dry-run"
 #define ARG_TVDB_API_KEY            "--tvdb-api"
 #define ARG_MOVIEDB_API_KEY         "--moviedb-api"
+#define ARG_NO_PROGRESS             "--no-progress"
+#define ARG_AUDIO_LANGS             "--audio-langs"
 #define ARG_OUTPUT_FOLDER           "--output-folder"
 #define ARG_NO_AUTO_COVER           "--no-auto-cover"
 #define ARG_STOP_ON_ERROR           "--stop-on-error"
+#define ARG_SUBTITLE_LANGS          "--subtitle-langs"
+#define ARG_PREFER_SDH_SUBS         "--prefer-sdh-subs"
+#define ARG_PREFER_TEXT_SUBS        "--prefer-text-subs"
 #define ARG_PREFER_ENGLISH_TITLE    "--prefer-eng-title"
 #define ARG_PREFER_ORIGINAL_TITLE   "--prefer-orig-title"
-#define ARG_DELETE_EXISTING_OUTPUT  "--delete-existing-output"
-#define ARG_NO_SMART_REPLACE_COVER  "--no-smart-replace-cover-art"
+#define ARG_PREFER_ONE_STREAM       "--prefer-one-stream"
 #define ARG_OVERRIDE_MOVIE_NAME     "--override-movie-name"
 #define ARG_OVERRIDE_SERIES_NAME    "--override-series-name"
 #define ARG_OVERRIDE_EPISODE_NAME   "--override-episode-name"
+#define ARG_DELETE_EXISTING_OUTPUT  "--delete-existing-output"
+#define ARG_PREFER_SIGN_SONG_SUBS   "--prefer-signs-songs-subs"
+#define ARG_NO_SMART_REPLACE_COVER  "--no-smart-replace-cover-art"
 
 
 static std::vector<std::pair<std::string, std::string>> helpList;
@@ -28,6 +38,46 @@ static void setupMap()
 {
 	helpList.push_back({ ARG_HELP,
 		"show this help"
+	});
+
+	helpList.push_back({ ARG_MUX,
+		"enable re-muxing file streams"
+	});
+
+	helpList.push_back({ ARG_TAG,
+		"enable metadata tagging"
+	});
+
+	helpList.push_back({ ARG_AUDIO_LANGS,
+		"a comma-separated list of languages (ISO 639-2) for audio tracks (eg. '--audio-langs eng,jpn')"
+	});
+
+	helpList.push_back({ ARG_SUBTITLE_LANGS,
+		"a comma-separated list of languages (ISO 639-2) for subtitles (eg. '--subtitle-langs eng,jpn')"
+	});
+
+	helpList.push_back({ ARG_PREFER_SDH_SUBS,
+		"prefer SDH-friendly subtitles"
+	});
+
+	helpList.push_back({ ARG_PREFER_TEXT_SUBS,
+		"prefer text-based subtitle formats (eg. ssa/ass/srt)"
+	});
+
+	helpList.push_back({ ARG_PREFER_SIGN_SONG_SUBS,
+		"prefer subtitles with (possibly only) signs/songs"
+	});
+
+	helpList.push_back({ ARG_PREFER_ONE_STREAM,
+		"only have one of each type (video, audio, subtitle -- excluding attachments) of stream in the output."
+	});
+
+	helpList.push_back({ ARG_CONFIG_PATH,
+		"set the path to the configuration file to use"
+	});
+
+	helpList.push_back({ ARG_NO_PROGRESS,
+		"disable progress indication (for muxing)"
 	});
 
 	helpList.push_back({ ARG_RENAME_FILES,
@@ -152,101 +202,30 @@ std::string parseQuotedString(char** argv, int& i)
 
 namespace args
 {
-	static std::string coverPathName;
-	static std::string seriesId;
-	static std::string outputFolder;
-
-	static std::string tvdbApiKey;
-	static std::string moviedbApiKey;
-
-	static bool dryrun = false;
-	static bool noAutoCover = false;
-	static bool stopOnError = false;
-	static bool renameFiles = false;
-	static bool preferEnglishTitle = false;
-	static bool noSmartReplaceCoverArt = false;
-
-	static bool overrideMovieName = false;
-	static bool overrideSeriesName = false;
-	static bool overrideEpisodeName = false;
-	static bool deleteExistingOutput = false;
-
-	std::string getManualSeriesId()
+	static std::vector<std::string> parseCommaSep(const std::string& s)
 	{
-		return seriesId;
+		bool warned = false;
+
+		std::vector<std::string> ret;
+		auto xs = util::splitString(s, ',');
+
+		for(const auto& x : xs)
+		{
+			if(x.size() != 3)
+			{
+				if(!warned)
+					util::warn("invalid language code '%s'. see https://w.wiki/EXG for a list.");
+
+				warned = true;
+			}
+			else
+			{
+				ret.push_back(x);
+			}
+		}
+
+		return ret;
 	}
-
-	std::string getManualCoverPath()
-	{
-		return coverPathName;
-	}
-
-	std::string getOutputFolder()
-	{
-		return outputFolder;
-	}
-
-	std::string getTVDBApiKey()
-	{
-		return tvdbApiKey;
-	}
-
-	std::string getMovieDBApiKey()
-	{
-		return moviedbApiKey;
-	}
-
-	bool isOverridingMovieName()
-	{
-		return overrideMovieName;
-	}
-
-	bool isOverridingSeriesName()
-	{
-		return overrideSeriesName;
-	}
-
-	bool isOverridingEpisodeName()
-	{
-		return overrideEpisodeName;
-	}
-
-	bool isDryRun()
-	{
-		return dryrun;
-	}
-
-	bool shouldRenameFiles()
-	{
-		return renameFiles;
-	}
-
-	bool isPreferEnglishTitle()
-	{
-		return preferEnglishTitle;
-	}
-
-	bool shouldStopOnError()
-	{
-		return stopOnError;
-	}
-
-	bool disableAutoCoverSearch()
-	{
-		return noAutoCover;
-	}
-
-	bool disableSmartReplaceCoverArt()
-	{
-		return noSmartReplaceCoverArt;
-	}
-
-	bool shouldDeleteExistingOutput()
-	{
-		return deleteExistingOutput;
-	}
-
-
 
 	std::vector<std::string> parseCmdLineOpts(int argc, char** argv)
 	{
@@ -271,12 +250,13 @@ namespace args
 					if(i != argc - 1)
 					{
 						i++;
-						coverPathName = argv[i];
+						config::setManualCoverPath(argv[i]);
 						continue;
 					}
 					else
 					{
-						util::error("error: expected path after '%s' option", argv[i]);
+						util::error("%serror:%s expected path after '%s' option", argv[i],
+							COLOUR_RED_BOLD, COLOUR_RESET);
 						exit(-1);
 					}
 				}
@@ -285,69 +265,135 @@ namespace args
 					if(i != argc - 1)
 					{
 						i++;
-						seriesId = argv[i];
+						config::setManualSeriesId(argv[i]);
 						continue;
 					}
 					else
 					{
-						util::error("error: expected id after '%s' option", argv[i]);
+						util::error("%serror:%s expected id after '%s' option", argv[i],
+							COLOUR_RED_BOLD, COLOUR_RESET);
 						exit(-1);
 					}
 				}
 				else if(!strcmp(argv[i], ARG_OVERRIDE_MOVIE_NAME))
 				{
-					overrideMovieName = true;
+					config::setIsOverridingMovieName(true);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_OVERRIDE_SERIES_NAME))
 				{
-					overrideSeriesName = true;
+					config::setIsOverridingSeriesName(true);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_OVERRIDE_EPISODE_NAME))
 				{
-					overrideEpisodeName = true;
+					config::setIsOverridingEpisodeName(true);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_NO_SMART_REPLACE_COVER))
 				{
-					noSmartReplaceCoverArt = true;
+					config::setDisableSmartReplaceCoverArt(true);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_DRY_RUN))
 				{
-					dryrun = true;
+					config::setIsDryRun(true);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_NO_AUTO_COVER))
 				{
-					noAutoCover = true;
+					config::setDisableAutoCoverSearch(true);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_STOP_ON_ERROR))
 				{
-					stopOnError = true;
+					config::setShouldStopOnError(true);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_DELETE_EXISTING_OUTPUT))
 				{
-					deleteExistingOutput = true;
+					config::setShouldDeleteExistingOutput(true);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_PREFER_ORIGINAL_TITLE))
 				{
-					preferEnglishTitle = false;
+					config::setIsPreferEnglishTitle(false);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_PREFER_ENGLISH_TITLE))
 				{
 					// so uncivilised.
-					preferEnglishTitle = true;
+					config::setIsPreferEnglishTitle(true);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_RENAME_FILES))
 				{
-					renameFiles = true;
+					config::setShouldRenameFiles(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_NO_PROGRESS))
+				{
+					config::setDisableProgress(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_PREFER_SDH_SUBS))
+				{
+					config::setPreferSDHSubs(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_PREFER_SIGN_SONG_SUBS))
+				{
+					config::setPreferSignSongSubs(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_PREFER_TEXT_SUBS))
+				{
+					config::setPreferTextSubs(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_PREFER_ONE_STREAM))
+				{
+					config::setPreferOneStream(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_AUDIO_LANGS))
+				{
+					if(i != argc - 1)
+					{
+						i++;
+						config::setAudioLangs(parseCommaSep(argv[i]));
+						continue;
+					}
+					else
+					{
+						util::error("%serror:%s expected string after '%s' option", argv[i],
+							COLOUR_RED_BOLD, COLOUR_RESET);
+						exit(-1);
+					}
+				}
+				else if(!strcmp(argv[i], ARG_SUBTITLE_LANGS))
+				{
+					if(i != argc - 1)
+					{
+						i++;
+						config::setSubtitleLangs(parseCommaSep(argv[i]));
+						continue;
+					}
+					else
+					{
+						util::error("%serror:%s expected string after '%s' option", argv[i],
+							COLOUR_RED_BOLD, COLOUR_RESET);
+						exit(-1);
+					}
+				}
+				else if(!strcmp(argv[i], ARG_MUX))
+				{
+					config::setIsMuxing(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_TAG))
+				{
+					config::setIsTagging(true);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_OUTPUT_FOLDER))
@@ -355,12 +401,28 @@ namespace args
 					if(i != argc - 1)
 					{
 						i++;
-						outputFolder = argv[i];
+						config::setOutputFolder(argv[i]);
 						continue;
 					}
 					else
 					{
-						util::error("error: expected path after '%s' option", argv[i]);
+						util::error("%serror:%s expected path after '%s' option", argv[i],
+							COLOUR_RED_BOLD, COLOUR_RESET);
+						exit(-1);
+					}
+				}
+				else if(!strcmp(argv[i], ARG_CONFIG_PATH))
+				{
+					if(i != argc - 1)
+					{
+						i++;
+						config::setConfigPath(argv[i]);
+						continue;
+					}
+					else
+					{
+						util::error("%serror:%s expected path after '%s' option", argv[i],
+							COLOUR_RED_BOLD, COLOUR_RESET);
 						exit(-1);
 					}
 				}
@@ -369,12 +431,13 @@ namespace args
 					if(i != argc - 1)
 					{
 						i++;
-						tvdbApiKey = argv[i];
+						config::setTVDBApiKey(argv[i]);
 						continue;
 					}
 					else
 					{
-						util::error("error: expected string after '%s' option", argv[i]);
+						util::error("%serror:%s expected string after '%s' option", argv[i],
+							COLOUR_RED_BOLD, COLOUR_RESET);
 						exit(-1);
 					}
 				}
@@ -383,18 +446,20 @@ namespace args
 					if(i != argc - 1)
 					{
 						i++;
-						moviedbApiKey = argv[i];
+						config::setMovieDBApiKey(argv[i]);
 						continue;
 					}
 					else
 					{
-						util::error("error: expected string after '%s' option", argv[i]);
+						util::error("%serror:%s expected string after '%s' option", argv[i],
+							COLOUR_RED_BOLD, COLOUR_RESET);
 						exit(-1);
 					}
 				}
 				else if(argv[i][0] == '-')
 				{
-					util::error("error: unrecognised option '%s'", argv[i]);
+					util::error("%serror:%s unrecognised option '%s'", argv[i],
+						COLOUR_RED_BOLD, COLOUR_RESET);
 					exit(-1);
 				}
 				else
@@ -406,7 +471,21 @@ namespace args
 
 		if(filenames.empty())
 		{
-			util::error("error: no input files");
+			util::error("%serror:%s no input files",
+				COLOUR_RED_BOLD, COLOUR_RESET);
+			exit(-1);
+		}
+
+		if(!config::isMuxing() && !config::isTagging())
+		{
+			util::error("%serror:%s one or both of '--mux' or '--tag' must be specified",
+				COLOUR_RED_BOLD, COLOUR_RESET);
+			exit(-1);
+		}
+		else if(config::getOutputFolder().empty() && config::isMuxing())
+		{
+			util::error("%serror:%s output folder must be specified ('--output-folder') when muxing",
+				COLOUR_RED_BOLD, COLOUR_RESET);
 			exit(-1);
 		}
 

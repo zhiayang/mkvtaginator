@@ -644,11 +644,11 @@ inline std::string value::_serialize(int indent) const {
 
 template <typename Iter> class input {
 protected:
+public:
   Iter cur_, end_;
   bool consumed_;
   int line_;
 
-public:
   input(const Iter &first, const Iter &last) : cur_(first), end_(last), consumed_(false), line_(1) {
   }
   int getc() {
@@ -836,6 +836,13 @@ template <typename Context, typename Iter> inline bool _parse_object(Context &ct
   }
   do {
     std::string key;
+    while (in.expect('/') && in.expect('/')) {
+      // consume.
+      while(*in.cur_ != '\n' && in.cur_ != in.end_)
+        in.cur_++;
+      in.line_++;
+    }
+
     if (!in.expect('"') || !_parse_string(key, in) || !in.expect(':')) {
       return false;
     }
@@ -869,6 +876,7 @@ template <typename Iter> inline std::string _parse_number(input<Iter> &in) {
 template <typename Context, typename Iter> inline bool _parse(Context &ctx, input<Iter> &in) {
   in.skip_ws();
   int ch = in.getc();
+top:
   switch (ch) {
 #define IS(ch, text, op)                                                                                                           \
   case ch:                                                                                                                         \
@@ -881,6 +889,16 @@ template <typename Context, typename Iter> inline bool _parse(Context &ctx, inpu
     IS('f', "alse", ctx.set_bool(false));
     IS('t', "rue", ctx.set_bool(true));
 #undef IS
+  case '/':
+    if (in.match("/")) {
+      // consume till end of line.
+      while(*in.cur_ != '\n' && in.cur_ != in.end_)
+        in.cur_++;
+      in.line_++;
+      goto top;
+    } else {
+      return false;
+    }
   case '"':
     return ctx.parse_string(in);
   case '[':

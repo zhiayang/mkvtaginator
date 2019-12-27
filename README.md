@@ -1,25 +1,30 @@
 # mkvtaginator
 
-The express purpose of this program is to tag Matroska (MKV) files with metadata, and optionally embed cover art into them. Uses `mkvmerge` and friends behind the scenes (usually part of the `mkvtoolnix` package).
+The express purpose of this program is to tag Matroska (MKV) files with metadata, and optionally embed cover art into them. Uses
+`mkvmerge` and friends behind the scenes (usually part of the `mkvtoolnix` package). It can also mux your "source" files using
+`ffmpeg` (`libavformat`) (which you must install).
 
 For the list of command-line options, use `--help`.
+
+As for dependencies, `mkvpropedit`, `mkvextract`, and `mkvmerge` must be in `$PATH` to work. `libcurl` and `ffmpeg` (specifically `libavformat`) are library dependencies.
 
 
 ### Short feature list
 
-1. Automatic filename parsing (tv: `SERIES_TITLE S04E14 - EPISODE_TITLE`, optional episode title; movies: `TITLE (YEAR)`)
+1. Automatic filename parsing for tv and movies
 2. Metadata search; user-selection for ambiguous results (select-once-and-remember)
 3. Cover art embedding; automatic if standard image names detected in current folder
 4. Option for in-place editing, or copying to a new file
+5. Automatic muxing with smart stream selection, and configurable language preferences (eg. `jpn` for audio, `eng` for subs)
 
 
 ### Usage
 
-Basic usage is: `./mkvtaginator [options] <input files>`. You can pass more than one file to the program, but they must all have the `.mkv`
-extension (and obviously must be valid mkv files).
+Basic usage is: `./mkvtaginator (--tag|--mux) [options] <input files>`. You can pass more than one file to the program,
+but they must all have the `.mkv` extension (and obviously must be valid mkv files). Use `--tag` to enable metadata tagging,
+`--mux` to enable input muxing, or both to do... both.
 
-It's recommended to use `--dry-run` to preview the command-line for `mkvpropedit`, especially when editing in-place (the default). Speaking
-of which, `mkvpropedit`, `mkvextract`, and `mkvmerge` must be in `$PATH` to work. There are no other external dependencies.
+It's recommended to use `--dry-run` first to preview the command-line for `mkvpropedit`, especially when editing in-place (the default).
 
 Since in the typical use-case you probably already know the correct series, use `--id <API_SPECIFIC_ID>` to manually specify the identifer
 of the series/movie, to skip searching and ensure that no user interaction is required.
@@ -31,6 +36,29 @@ would just overwrite it.
 To rename the output file into so-called "canonical" form, use `--rename`. This will rename TV shows into the form
 `SERIES_NAME S01E01 - EPISODE_TITLE.mkv` (the episode title is omitted if none exists), and movies into the form `TITLE (YEAR).mkv`. The
 extension will always be `mkv`.
+
+
+
+### Muxing
+
+`mkvtaginator` can now "mux" your source files directly; this involves selecting streams matching certain criteria, and copying them
+to an output file using `libavformat`. There are 6 options involving this, which can be found in the `--help` menu. Basically it lets
+you control what kind of subtitles you prefer (SDH, text formats, signs/songs only).
+
+More interesting is the language selection; you can specify the priority of languages for audio and subtitles independently. This can
+be specified either on the command line or using the config file.
+
+
+
+### Configuration
+
+All options can be set from the command line; some things don't make sense to be set from the configuration file. The default path
+is `$HOME/.config/mkvtaginator/config.json`, failing which it looks for `mkvtaginator-config.json` and `.mkvtaginator-config.json` in
+the current directory. If none of those are present, it uses default options.
+
+The default options, as well as the sample configuration file (and its schema) can be found in `sample-config.json` in this repository.
+
+
 
 ### Cover art detection
 

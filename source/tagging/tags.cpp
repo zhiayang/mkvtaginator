@@ -5,7 +5,7 @@
 #include "defs.h"
 #include "tinyxml2.h"
 
-namespace tags
+namespace tag
 {
 	tinyxml2::XMLDocument* serialiseMetadata(const EpisodeMetadata& meta)
 	{
