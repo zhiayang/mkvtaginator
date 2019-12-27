@@ -293,7 +293,7 @@ namespace tag
 
 		if(!config::isDryRun())
 		{
-			if(std::fs::exists(outpath) && config::shouldDeleteExistingOutput())
+			if(std::fs::exists(outpath) && config::shouldDeleteExistingOutput() && !std::fs::equivalent(outpath, filepath))
 				std::fs::remove(outpath);
 
 			if(!std::fs::exists(outpath))
