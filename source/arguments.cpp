@@ -8,9 +8,11 @@
 #define ARG_MUX                     "--mux"
 #define ARG_TAG                     "--tag"
 #define ARG_COVER_IMAGE             "--cover"
+#define ARG_MOVIE_ID                "--movie"
 #define ARG_CONFIG_PATH             "--config"
 #define ARG_SERIES_ID               "--series"
 #define ARG_RENAME_FILES            "--rename"
+#define ARG_MANUAL_SEASON           "--season"
 #define ARG_DRY_RUN                 "--dry-run"
 #define ARG_TVDB_API_KEY            "--tvdb-api"
 #define ARG_MOVIEDB_API_KEY         "--moviedb-api"
@@ -20,6 +22,7 @@
 #define ARG_NO_AUTO_COVER           "--no-auto-cover"
 #define ARG_STOP_ON_ERROR           "--stop-on-error"
 #define ARG_SUBTITLE_LANGS          "--subtitle-langs"
+#define ARG_SKIP_NCOP_NCED          "--skip-ncop-nced"
 #define ARG_PREFER_SDH_SUBS         "--prefer-sdh-subs"
 #define ARG_PREFER_TEXT_SUBS        "--prefer-text-subs"
 #define ARG_PREFER_ENGLISH_TITLE    "--prefer-eng-title"
@@ -46,6 +49,18 @@ static void setupMap()
 
 	helpList.push_back({ ARG_TAG,
 		"enable metadata tagging"
+	});
+
+	helpList.push_back({ ARG_MANUAL_SEASON,
+		"specify the season number manually (most useful together with '--series')"
+	});
+
+	helpList.push_back({ ARG_SERIES_ID,
+		"specify the series id (tvdb) (implies tv series -- disables movie matching)"
+	});
+
+	helpList.push_back({ ARG_MOVIE_ID,
+		"specify the movie id (moviedb) (implies movie -- disables tv matching)"
 	});
 
 	helpList.push_back({ ARG_AUDIO_LANGS,
@@ -255,8 +270,23 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected path after '%s' option", argv[i],
-							COLOUR_RED_BOLD, COLOUR_RESET);
+						util::error("%serror:%s expected path after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
+						exit(-1);
+					}
+				}
+				else if(!strcmp(argv[i], ARG_MOVIE_ID))
+				{
+					if(i != argc - 1)
+					{
+						i++;
+						config::setManualMovieId(argv[i]);
+						continue;
+					}
+					else
+					{
+						util::error("%serror:%s expected id after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
 						exit(-1);
 					}
 				}
@@ -270,8 +300,8 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected id after '%s' option", argv[i],
-							COLOUR_RED_BOLD, COLOUR_RESET);
+						util::error("%serror:%s expected id after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
 						exit(-1);
 					}
 				}
@@ -356,6 +386,11 @@ namespace args
 					config::setPreferOneStream(true);
 					continue;
 				}
+				else if(!strcmp(argv[i], ARG_SKIP_NCOP_NCED))
+				{
+					config::setSkipNCOPNCED(true);
+					continue;
+				}
 				else if(!strcmp(argv[i], ARG_AUDIO_LANGS))
 				{
 					if(i != argc - 1)
@@ -366,8 +401,8 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected string after '%s' option", argv[i],
-							COLOUR_RED_BOLD, COLOUR_RESET);
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
 						exit(-1);
 					}
 				}
@@ -381,8 +416,8 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected string after '%s' option", argv[i],
-							COLOUR_RED_BOLD, COLOUR_RESET);
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
 						exit(-1);
 					}
 				}
@@ -396,6 +431,30 @@ namespace args
 					config::setIsTagging(true);
 					continue;
 				}
+				else if(!strcmp(argv[i], ARG_MANUAL_SEASON))
+				{
+					if(i != argc - 1)
+					{
+						i++;
+						std::string str = argv[i];
+
+						for(char c : str)
+						{
+							if(c < '0' || c > '9')
+								goto not_number;
+						}
+
+						config::setSeasonNumber(std::stoi(str));
+						continue;
+					}
+					else
+					{
+					not_number:
+						util::error("%serror:%s expected (positive) integer after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
+						exit(-1);
+					}
+				}
 				else if(!strcmp(argv[i], ARG_OUTPUT_FOLDER))
 				{
 					if(i != argc - 1)
@@ -406,8 +465,8 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected path after '%s' option", argv[i],
-							COLOUR_RED_BOLD, COLOUR_RESET);
+						util::error("%serror:%s expected path after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
 						exit(-1);
 					}
 				}
@@ -421,8 +480,8 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected path after '%s' option", argv[i],
-							COLOUR_RED_BOLD, COLOUR_RESET);
+						util::error("%serror:%s expected path after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
 						exit(-1);
 					}
 				}
@@ -436,8 +495,8 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected string after '%s' option", argv[i],
-							COLOUR_RED_BOLD, COLOUR_RESET);
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
 						exit(-1);
 					}
 				}
@@ -451,15 +510,15 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected string after '%s' option", argv[i],
-							COLOUR_RED_BOLD, COLOUR_RESET);
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
 						exit(-1);
 					}
 				}
 				else if(argv[i][0] == '-')
 				{
-					util::error("%serror:%s unrecognised option '%s'", argv[i],
-						COLOUR_RED_BOLD, COLOUR_RESET);
+					util::error("%serror:%s unrecognised option '%s'", COLOUR_RED_BOLD, COLOUR_RESET,
+						argv[i]);
 					exit(-1);
 				}
 				else

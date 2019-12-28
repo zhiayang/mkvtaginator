@@ -184,6 +184,7 @@ namespace config
 
 
 	std::string getOutputFolder();
+	std::string getManualMovieId();
 	std::string getManualSeriesId();
 	std::string getManualCoverPath();
 
@@ -206,12 +207,15 @@ namespace config
 	bool isPreferOneStream();
 	bool isPreferSignSongSubs();
 
+	bool shouldSkipNCOPNCED();
+
 	bool isDryRun();
 	bool disableProgress();
 	bool shouldRenameFiles();
 	bool shouldStopOnError();
 	bool isPreferEnglishTitle();
 	bool disableAutoCoverSearch();
+	int getSeasonNumber();
 
 
 	bool isMuxing();
@@ -225,8 +229,11 @@ namespace config
 	void setPreferTextSubs(bool x);
 	void setPreferOneStream(bool x);
 	void setPreferSignSongSubs(bool x);
+	void setSkipNCOPNCED(bool x);
+	void setSeasonNumber(int x);
 
 	void setOutputFolder(const std::string& x);
+	void setManualMovieId(const std::string& x);
 	void setManualSeriesId(const std::string& x);
 	void setManualCoverPath(const std::string& x);
 	void setMovieDBApiKey(const std::string& x);

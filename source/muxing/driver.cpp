@@ -425,6 +425,47 @@ namespace mux
 		};
 
 		{
+			if(videoStrms.empty())
+				error("error: no video streams!");
+
+			if(audioStrms.empty())
+			{
+				// if nothing matched, then give options.
+				if(audioStreamLangs.empty())
+					error("error: no audio streams!");
+
+				// add them all.
+				for(const auto& x : audioStreamLangs)
+					for(const auto& y : x.second)
+						audioStrms.push_back(y.first);
+
+				if(audioStrms.size() == 1)
+					util::warn("warn: selected default audio stream");
+
+				else
+					util::warn("warn: ambiguous audio streams (none matching language)");
+			}
+
+			if(subtitleStrms.empty())
+			{
+				// if nothing matched, then give options.
+				if(subtitleStreamLangs.empty())
+					error("error: no audio streams!");
+
+				// add them all.
+				for(const auto& x : subtitleStreamLangs)
+					for(const auto& y : x.second)
+						subtitleStrms.push_back(y.first);
+
+				if(subtitleStrms.size() == 1)
+					util::warn("warn: selected default subtitle stream");
+
+				else
+					util::warn("warn: ambiguous subtitle streams (none matching language)");
+			}
+
+
+
 			if(videoStrms.size() > 1)
 			{
 				if(!onlyOneStream)
@@ -481,6 +522,15 @@ namespace mux
 
 
 		util::log("selected %d streams: %s", finalStreams.size(), util::listToString(finalStreams, util::tostring()));
+		for(auto idx : finalStreams)
+		{
+			auto lang = dict_get_value(ctx->streams[idx]->metadata, "language");
+			auto name = dict_get_value(ctx->streams[idx]->metadata, "title");
+
+			util::info("%d%s: %s%s%s%s", idx, lang.empty() ? "" : zpr::sprint(" (%s)", lang),
+				COLOUR_BLACK_BOLD, avcodec_get_name(ctx->streams[idx]->codecpar->codec_id), COLOUR_RESET,
+				name.empty() ? "" : zpr::sprint(" - %s", name));
+		}
 
 		// make the output file
 		assert(!config::getOutputFolder().empty());

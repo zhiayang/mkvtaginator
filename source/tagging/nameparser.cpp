@@ -7,6 +7,23 @@
 
 namespace tag
 {
+	static std::string sanitiseName(std::string name)
+	{
+		// last step: see if there's no spaces but a whole bunch of periods in the title...
+		if(name.find(' ') == std::string::npos && name.find('.') != std::string::npos)
+		{
+			std::replace(name.begin(), name.end(), '.', ' ');
+			name = util::trim(name);
+		}
+		else if(name.find(' ') == std::string::npos && name.find('_') != std::string::npos)
+		{
+			std::replace(name.begin(), name.end(), '_', ' ');
+			name = util::trim(name);
+		}
+
+		return name;
+	}
+
 	static std::tuple<std::string, int, int, std::string> parseStrangeTVShow(const std::string& filename)
 	{
 		// morally questionable sources, i say?
@@ -19,7 +36,7 @@ namespace tag
 
 		// these typically don't come with seasons, so we'll assume it's 1
 		// (at least, i haven't encountered them before)
-		auto regex = std::regex("(?:\\[.+\\] *)?(.+?)(?: +-)?(?: +|E|EP|e|ep)(\\d+)(?:.*)");
+		auto regex = std::regex("(?:\\[.+\\] *)?(.+?)(?: +-)?(?: +|E|EP|e|ep|-|_)(\\d+)(?:.*)");
 		{
 			std::smatch sm;
 			std::regex_match(filename, sm, regex);
@@ -48,13 +65,7 @@ namespace tag
 			}
 		}
 
-		// last step: see if there's no spaces but a whole bunch of periods in the title...
-		if(series.find(' ') == std::string::npos && series.find('.') != std::string::npos)
-		{
-			std::replace(series.begin(), series.end(), '.', ' ');
-			series = util::trim(series);
-		}
-
+		series = sanitiseName(series);
 		return std::tuple(series, season, episode, title);
 	}
 
@@ -108,3 +119,10 @@ namespace tag
 		return std::tuple(title, year);
 	}
 }
+
+
+
+
+
+
+

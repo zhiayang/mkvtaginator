@@ -83,7 +83,7 @@ namespace tag
 				{
 					attachment.doNotReattach = true;
 				}
-				else
+				else if(!config::isDryRun())
 				{
 					// extract it.
 					tinyproclib::Process proc(zpr::sprint("%s -q \"%s\" attachments %d:%s", MKVEXTRACT_PROGRAM,
@@ -106,50 +106,62 @@ namespace tag
 		std::vector<std::string>& coverArtNames)
 	{
 		// try tv series
-		auto [ series, season, episode, title ] = parseTVShow(filepath.stem().string());
-		if(!series.empty())
+		if(!config::getManualSeriesId().empty() || config::getManualMovieId().empty())
 		{
-			auto metadata = tvdb::fetchEpisodeMetadata(series, season, episode, title, config::getManualSeriesId());
-			if(!metadata.valid)
+			auto [ series, season, episode, title ] = parseTVShow(filepath.stem().string());
+
+			// for this, we need season/episode info, so even if you give the series id there's no point.
+			if(!series.empty())
 			{
-				error("failed to find metadata");
-				return { GenericMetadata(), "", nullptr };
+				if(int x = config::getSeasonNumber(); x != -1)
+					season = x;
+
+				auto metadata = tvdb::fetchEpisodeMetadata(series, season, episode, title, config::getManualSeriesId());
+				if(!metadata.valid)
+				{
+					error("failed to find metadata");
+					return { GenericMetadata(), "", nullptr };
+				}
+
+				util::info("tv: %s S%02dE%02d - %s", metadata.seriesMeta.name, metadata.seasonNumber,
+					metadata.episodeNumber, metadata.name);
+
+				auto xml = serialiseMetadata(metadata);
+
+				coverArtNames.insert(coverArtNames.begin(), "season");
+				coverArtNames.insert(coverArtNames.begin(), "Season");
+				coverArtNames.insert(coverArtNames.begin(), zpr::sprint("season%d", metadata.seasonNumber));
+				coverArtNames.insert(coverArtNames.begin(), zpr::sprint("Season%d", metadata.seasonNumber));
+				coverArtNames.insert(coverArtNames.begin(), zpr::sprint("season%02d", metadata.seasonNumber));
+				coverArtNames.insert(coverArtNames.begin(), zpr::sprint("Season%02d", metadata.seasonNumber));
+
+				metadata.normalTitle = zpr::sprint("%s S%02dE%02d%s", metadata.seriesMeta.name, metadata.seasonNumber,
+					metadata.episodeNumber, metadata.name.empty() ? "" : zpr::sprint(" - %s", metadata.name));
+
+				metadata.canonicalTitle = zpr::sprint("%s S%02dE%02d", metadata.seriesMeta.name, metadata.seasonNumber,
+					metadata.episodeNumber);
+
+				metadata.episodeTitle = metadata.name;
+
+				return {
+					static_cast<GenericMetadata>(metadata),
+					zpr::sprint(".tmp-mkvinator-tags-s%02d-e%02d.xml", metadata.seasonNumber, metadata.episodeNumber),
+					xml
+				};
 			}
-
-			util::info("tv: %s S%02dE%02d - %s", metadata.seriesMeta.name, metadata.seasonNumber,
-				metadata.episodeNumber, metadata.name);
-
-			auto xml = serialiseMetadata(metadata);
-
-			coverArtNames.insert(coverArtNames.begin(), "season");
-			coverArtNames.insert(coverArtNames.begin(), "Season");
-			coverArtNames.insert(coverArtNames.begin(), zpr::sprint("season%d", metadata.seasonNumber));
-			coverArtNames.insert(coverArtNames.begin(), zpr::sprint("Season%d", metadata.seasonNumber));
-			coverArtNames.insert(coverArtNames.begin(), zpr::sprint("season%02d", metadata.seasonNumber));
-			coverArtNames.insert(coverArtNames.begin(), zpr::sprint("Season%02d", metadata.seasonNumber));
-
-			metadata.normalTitle = zpr::sprint("%s S%02dE%02d%s", metadata.seriesMeta.name, metadata.seasonNumber,
-				metadata.episodeNumber, metadata.name.empty() ? "" : zpr::sprint(" - %s", metadata.name));
-
-			metadata.canonicalTitle = zpr::sprint("%s S%02dE%02d", metadata.seriesMeta.name, metadata.seasonNumber,
-				metadata.episodeNumber);
-
-			metadata.episodeTitle = metadata.name;
-
-			return {
-				static_cast<GenericMetadata>(metadata),
-				zpr::sprint(".tmp-mkvinator-tags-s%02d-e%02d.xml", metadata.seasonNumber, metadata.episodeNumber),
-				xml
-			};
 		}
-		else
+
+
+		if(!config::getManualMovieId().empty() || config::getManualSeriesId().empty())
 		{
 			// try movie
 			auto [ title, year ] = parseMovie(filepath.stem().string());
-			if(title.empty())
+
+			// for movies, as long as we have the ID it's ok.
+			if(title.empty() && config::getManualMovieId().empty())
 				goto fail;
 
-			auto metadata = moviedb::fetchMovieMetadata(title, year, config::getManualSeriesId());
+			auto metadata = moviedb::fetchMovieMetadata(title, year, config::getManualMovieId());
 			if(!metadata.valid)
 			{
 				error("failed to find metadata");
@@ -230,6 +242,7 @@ namespace tag
 				}
 			}
 
+			// then, relative to the current directory:
 			if(cover.empty())
 			{
 				for(const auto& x : tries)
@@ -237,6 +250,20 @@ namespace tag
 					if(std::fs::exists(x))
 					{
 						cover = x;
+						break;
+					}
+				}
+			}
+
+			// then, relative to the output folder:
+			if(cover.empty() && !config::getOutputFolder().empty())
+			{
+				auto of = std::fs::path(config::getOutputFolder());
+				for(const auto& x : tries)
+				{
+					if(std::fs::exists(of / x))
+					{
+						cover = of / x;
 						break;
 					}
 				}

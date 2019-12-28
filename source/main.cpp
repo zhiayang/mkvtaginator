@@ -12,9 +12,6 @@ int main(int argc, char** argv)
 
 	util::info("received %zu %s", files.size(), util::plural("file", files.size()));
 
-	if(!config::getManualSeriesId().empty())
-		util::info("skipping search: using series id '%s'", config::getManualSeriesId());
-
 	driver::createOutputFolder();
 
 	auto paths = driver::collectFiles(files);
@@ -128,6 +125,14 @@ namespace driver
 					if(config::shouldStopOnError()) exit(-1);
 					continue;
 				}
+			}
+
+
+			if(auto n = filepath.filename().string(); config::shouldSkipNCOPNCED()
+				&& (n.find("NCOP") != std::string::npos || n.find("NCED") != std::string::npos))
+			{
+				util::log("skipping file '%s'", filepath.filename().string());
+				continue;
 			}
 
 			ret.push_back(filepath);

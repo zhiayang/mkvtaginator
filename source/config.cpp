@@ -192,6 +192,7 @@ namespace config
 				setPreferSDHSubs(get_bool("prefer-sdh-subtitles", false));
 				setPreferTextSubs(get_bool("prefer-text-subtitles", true));
 				setPreferSignSongSubs(get_bool("prefer-signs-and-songs-subs", false));
+				setSkipNCOPNCED(get_bool("skip-ncop-nced", false));
 			}
 			else
 			{
@@ -230,6 +231,7 @@ namespace config
 
 
 	static std::string coverPathName;
+	static std::string movieId;
 	static std::string seriesId;
 	static std::string outputFolder;
 
@@ -247,6 +249,7 @@ namespace config
 	static bool noAutoCover = false;
 	static bool stopOnError = false;
 	static bool renameFiles = false;
+	static bool skipNCOPNCED = false;
 	static bool preferEnglishTitle = false;
 	static bool noSmartReplaceCoverArt = false;
 	static bool renameWithoutEpisodeTitle = false;
@@ -261,6 +264,9 @@ namespace config
 	static bool overrideEpisodeName = false;
 	static bool deleteExistingOutput = false;
 
+	// 0 is a valid season, lmao
+	static int manualSeasonNumber = -1;
+
 
 	void setAudioLangs(const std::vector<std::string>& xs)      { audioLangs = xs; }
 	void setSubtitleLangs(const std::vector<std::string>& xs)   { subtitleLangs = xs; }
@@ -268,6 +274,7 @@ namespace config
 	std::vector<std::string> getAudioLangs()    { return audioLangs; }
 	std::vector<std::string> getSubtitleLangs() { return subtitleLangs; }
 
+	std::string getManualMovieId()          { return movieId; }
 	std::string getManualSeriesId()         { return seriesId; }
 	std::string getManualCoverPath()        { return coverPathName; }
 	std::string getOutputFolder()           { return outputFolder; }
@@ -292,7 +299,10 @@ namespace config
 	bool isPreferTextSubs()                 { return preferTextSubs; }
 	bool isPreferOneStream()                { return preferOneStream; }
 	bool isPreferSignSongSubs()             { return preferSignSongSubs; }
+	bool shouldSkipNCOPNCED()               { return skipNCOPNCED; }
+	int getSeasonNumber()                   { return manualSeasonNumber; }
 
+	void setManualMovieId(const std::string& x)     { movieId = x; }
 	void setManualSeriesId(const std::string& x)    { seriesId = x; }
 	void setManualCoverPath(const std::string& x)   { coverPathName = x; }
 	void setOutputFolder(const std::string& x)      { outputFolder = x; }
@@ -316,7 +326,8 @@ namespace config
 	void setPreferTextSubs(bool x)                  { preferTextSubs = x; }
 	void setPreferOneStream(bool x)                 { preferOneStream = x; }
 	void setPreferSignSongSubs(bool x)              { preferSignSongSubs = x; }
-
+	void setSkipNCOPNCED(bool x)                    { skipNCOPNCED = x; }
+	void setSeasonNumber(int x)                     { manualSeasonNumber = x; }
 
 	void setConfigPath(const std::string& x)
 	{

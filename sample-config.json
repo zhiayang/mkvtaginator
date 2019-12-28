@@ -61,6 +61,10 @@
 		// default: FALSE
 		"override-episode-name":        false,
 
+		// skip NCOP/NCED files.
+		// default: FALSE
+		"skip-ncop-nced":               false,
+
 		// the list of preferred languages for audio tracks, with the highest priority first.
 		// default: [ eng ]
 		"preferred-audio-languages": [

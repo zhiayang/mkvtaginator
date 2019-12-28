@@ -287,7 +287,7 @@ namespace tag::moviedb
 			}
 
 			// ok. if we're overriding, then override:
-			if(config::isOverridingMovieName())
+			if(config::isOverridingMovieName() && !title.empty())
 				ret.title = title;
 
 			else if(!config::isPreferEnglishTitle())
