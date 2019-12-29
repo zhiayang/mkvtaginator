@@ -6,7 +6,7 @@ The express purpose of this program is to tag Matroska (MKV) files with metadata
 
 For the list of command-line options, use `--help`.
 
-As for dependencies, `mkvpropedit`, `mkvextract`, and `mkvmerge` must be in `$PATH` to work. `libcurl` and `ffmpeg` (specifically `libavformat`) are library dependencies.
+As for dependencies, `mkvpropedit`, `mkvextract`, and `mkvmerge` must be in `$PATH` to work. `libcurl` and `ffmpeg` (specifically `libavformat`, `libavutil`, and `libavcodec`) are library dependencies.
 
 
 ### Short feature list
@@ -16,7 +16,7 @@ As for dependencies, `mkvpropedit`, `mkvextract`, and `mkvmerge` must be in `$PA
 3. Cover art embedding; automatic if standard image names detected in current folder
 4. Option for in-place editing, or copying to a new file
 5. Automatic muxing with smart stream selection, and configurable language preferences (eg. `jpn` for audio, `eng` for subs)
-
+6. Muxing subtitles from a second file
 
 ### Usage
 
@@ -26,8 +26,9 @@ but they must all have the `.mkv` extension (and obviously must be valid mkv fil
 
 It's recommended to use `--dry-run` first to preview the command-line for `mkvpropedit`, especially when editing in-place (the default).
 
-Since in the typical use-case you probably already know the correct series, use `--id <API_SPECIFIC_ID>` to manually specify the identifer
-of the series/movie, to skip searching and ensure that no user interaction is required.
+Since in the typical use-case you probably already know the correct series, use `--movie <API_SPECIFIC_ID>` or `--series <...>` to
+manually specify the identifer of the series/movie, to skip searching and ensure that no user interaction is required. Note that using
+`--movie` implies a movie input (and so it won't try to match against TV series), and vice versa.
 
 To enable "out-of-place" output (ie. the input files are copied, and the new copy is modified with the originals untouched), simply use
 `--output-folder <FOLDER_PATH>`; for any given input file, the output path must not coincide with the path of the input &mdash; since that
@@ -36,6 +37,8 @@ would just overwrite it.
 To rename the output file into so-called "canonical" form, use `--rename`. This will rename TV shows into the form
 `SERIES_NAME S01E01 - EPISODE_TITLE.mkv` (the episode title is omitted if none exists), and movies into the form `TITLE (YEAR).mkv`. The
 extension will always be `mkv`.
+
+If, for some reason, you need to manually specify the season number, you can use `--season <N>`.
 
 
 
@@ -48,6 +51,10 @@ you control what kind of subtitles you prefer (SDH, text formats, signs/songs on
 More interesting is the language selection; you can specify the priority of languages for audio and subtitles independently. This can
 be specified either on the command line or using the config file.
 
+Finally, a useful feature is the ability to pull subtitles (and attachments) from a secondary source, while using the video and audio
+streams from the 'main' input file. To do this, pass the `--extra-subs-folder` option, specifying the path to a *folder* where the
+extra files reside. `mkvtaginator` will automatically enumerate the files in the folder and select the best match (with series name,
+season/episode number) to mux. Note that this discards the subtitles from the main input file.
 
 
 ### Configuration
