@@ -406,10 +406,11 @@ namespace mux
 				goto fail;
 
 			// for this, we need season/episode info, so even if you give the series id there's no point.
+			int manualSeason = 0;
 			if(!series.empty())
 			{
 				if(int x = config::getSeasonNumber(); x != -1)
-					season = x;
+					season = x, manualSeason = x;
 			}
 
 			// check all the files.
@@ -417,7 +418,7 @@ namespace mux
 			for(const auto& subfile : files)
 			{
 				auto [ srs, ssn, ep, ttl ] = tag::parseTVShow(subfile.filename().stem());
-				if(srs == series && ssn == season && ep == episode)
+				if(srs == series && (ssn == season || ssn == manualSeason) && ep == episode)
 					matches.push_back(subfile);
 			}
 
