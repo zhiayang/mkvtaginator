@@ -104,21 +104,25 @@ namespace mux
 		{
 			// is this even advisable??? subtitle files should be small, right??
 			std::deque<AVPacket*> ss_pkts;
-			while(ssctx && true)
+			if(ssctx)
 			{
-				AVPacket pkt;
-				if(av_read_frame(ssctx, &pkt) < 0)
-					break;
-
-				auto ssstrm = ssctx->streams[pkt.stream_index];
-				if(finalStreamMap.find(ssstrm) == finalStreamMap.end())
+				util::log("fetching subtitle frames");
+				while(ssctx)
 				{
-					av_packet_unref(&pkt);
-					continue;
-				}
+					AVPacket pkt;
+					if(av_read_frame(ssctx, &pkt) < 0)
+						break;
 
-				ss_pkts.push_back(av_packet_clone(&pkt));
-				av_packet_unref(&pkt);
+					auto ssstrm = ssctx->streams[pkt.stream_index];
+					if(finalStreamMap.find(ssstrm) == finalStreamMap.end())
+					{
+						av_packet_unref(&pkt);
+						continue;
+					}
+
+					ss_pkts.push_back(av_packet_clone(&pkt));
+					av_packet_unref(&pkt);
+				}
 			}
 
 			// sort the packets by pts?
