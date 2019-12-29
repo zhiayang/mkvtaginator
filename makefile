@@ -38,8 +38,8 @@ COMPILER_IDENT  := $(shell $(CC) --version | head -n 1)
 CURL_CFLAGS     := $(shell pkg-config --cflags libcurl)
 CURL_LDFLAGS    := $(shell pkg-config --libs libcurl)
 
-LIBAV_CFLAGS    := $(shell pkg-config --cflags libavformat libavutil)
-LIBAV_LDFLAGS   := $(shell pkg-config --libs libavformat libavutil)
+LIBAV_CFLAGS    := $(shell pkg-config --cflags libavformat libavutil libavcodec)
+LIBAV_LDFLAGS   := $(shell pkg-config --libs libavformat libavutil libavcodec)
 
 
 
