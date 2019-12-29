@@ -69,7 +69,8 @@ namespace misc
 
 		std::vector<std::string> paragraphs = util::mapFilter(splitString(block), [](std::string_view sv) -> std::string {
 			auto s = std::string(sv);
-			s.erase(std::remove(s.begin(), s.end(), '\r'));
+			if(auto it = std::remove(s.begin(), s.end(), '\r'); it != s.end())
+				s.erase(it);
 
 			return s;
 		}, [](const std::string& s) -> bool {
