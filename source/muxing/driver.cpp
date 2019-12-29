@@ -767,15 +767,30 @@ namespace mux
 			return std::to_string(x->index);
 		}));
 
+		util::indent_log();
 		for(auto strm : finalStreams)
 		{
 			auto lang = dict_get_value(strm->metadata, "language");
 			auto name = dict_get_value(strm->metadata, "title");
 
-			util::info("%d%s: %s%s%s%s", strm->index, lang.empty() ? "" : zpr::sprint(" (%s)", lang),
-				COLOUR_BLACK_BOLD, avcodec_get_name(strm->codecpar->codec_id), COLOUR_RESET,
-				name.empty() ? "" : zpr::sprint(" - %s", name));
+			auto filename = dict_get_value(strm->metadata, "filename");
+
+			std::string type;
+			if(strm->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)        type = "vid";
+			if(strm->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)        type = "aud";
+			if(strm->codecpar->codec_type == AVMEDIA_TYPE_SUBTITLE)     type = "sub";
+			if(strm->codecpar->codec_type == AVMEDIA_TYPE_ATTACHMENT)   type = "att";
+
+			if(!type.empty())
+				type = zpr::sprint("%s%s:%s ", COLOUR_GREY_BOLD, type, COLOUR_RESET);
+
+			util::info("%2d%s: %s%s%s%s%s", strm->index, lang.empty() ? "" : zpr::sprint(" (%s)", lang),
+				type, COLOUR_BLACK_BOLD, avcodec_get_name(strm->codecpar->codec_id), COLOUR_RESET,
+				strm->codecpar->codec_type == AVMEDIA_TYPE_ATTACHMENT
+					? filename.empty() ? "" : zpr::sprint(" - %s", filename)
+					: name.empty() ? "" : zpr::sprint(" - %s", name));
 		}
+		util::unindent_log();
 
 		// make the output file
 		assert(!config::getOutputFolder().empty());
