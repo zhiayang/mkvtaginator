@@ -122,6 +122,13 @@ namespace mux
 
 					ss_pkts.push_back(av_packet_clone(&pkt));
 					av_packet_unref(&pkt);
+
+
+					if(!config::disableProgress())
+					{
+						fprintf(stderr, "%s", zpr::sprint("\x1b[2K\r%s %s*%s frame %d\r", std::string(2 * util::get_log_indent(), ' '),
+							COLOUR_MAGENTA_BOLD, COLOUR_RESET, ss_pkts.size()).c_str());
+					}
 				}
 			}
 
