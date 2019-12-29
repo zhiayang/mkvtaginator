@@ -128,8 +128,8 @@ namespace driver
 
 
 			if(auto n = filepath.filename().string(); config::shouldSkipNCOPNCED()
-				&& (n.find("NCOP") != std::string::npos || n.find("NCED") != std::string::npos) ||
-					util::lowercase(n).find("creditless") != std::string::npos)
+				&& (n.find("NCOP") != std::string::npos || n.find("NCED") != std::string::npos ||
+					util::lowercase(n).find("creditless") != std::string::npos))
 			{
 				util::log("skipping file '%s'", filepath.filename().string());
 				continue;
