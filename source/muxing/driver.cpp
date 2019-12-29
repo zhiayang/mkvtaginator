@@ -130,6 +130,9 @@ namespace mux
 							COLOUR_MAGENTA_BOLD, COLOUR_RESET, ss_pkts.size()).c_str());
 					}
 				}
+
+				if(!config::disableProgress())
+					fprintf(stderr, "\n");
 			}
 
 			// sort the packets by pts?
