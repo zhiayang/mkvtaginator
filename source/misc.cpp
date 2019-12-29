@@ -226,7 +226,7 @@ namespace misc
 
 		int x = 0;
 		int n = fscanf(stdin, "%d", &x);
-		if(n <= 0 || x <= 0 || x > options.size())
+		if(n <= 0 || x <= 0 || static_cast<size_t>(x) > options.size())
 		{
 			if(fgetc(stdin) == 'm' && showmore)
 			{

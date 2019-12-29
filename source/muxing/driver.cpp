@@ -549,7 +549,7 @@ namespace mux
 			bool preferSigns    = config::isPreferSignSongSubs();
 			bool preferTextSubs = config::isPreferTextSubs();
 
-			for(auto i = 0; i < ctx->nb_streams; i++)
+			for(unsigned int i = 0; i < ctx->nb_streams; i++)
 			{
 				auto strm = ctx->streams[i];
 				if(strm->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)

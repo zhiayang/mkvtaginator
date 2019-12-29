@@ -46,6 +46,13 @@ LIBAV_LDFLAGS   := $(shell pkg-config --libs libavformat libavutil)
 CXXFLAGS += $(CURL_CFLAGS) $(LIBAV_CFLAGS)
 LDFLAGS  += $(CURL_LDFLAGS) $(LIBAV_LDFLAGS)
 
+
+ifeq ("$(UNAME_IDENT)","Darwin")
+else
+	LDFLAGS += -lpthread
+endif
+
+
 .DEFAULT_GOAL = all
 -include $(CXXDEPS)
 
