@@ -116,6 +116,10 @@ namespace tag
 				if(int x = config::getSeasonNumber(); x != -1)
 					season = x;
 
+				// if there's no season, assume 1.
+				if(season == -1)
+					season = 1;
+
 				auto metadata = tvdb::fetchEpisodeMetadata(series, season, episode, title, config::getManualSeriesId());
 				if(!metadata.valid)
 				{

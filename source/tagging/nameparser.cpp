@@ -32,9 +32,10 @@ namespace tag
 		std::string title;
 		int episode = 0;
 
-		int season = 1;
+		// callers know how to handle this -- if -1, then assume 1.
+		int season = -1;
 
-		// these typically don't come with seasons, so we'll assume it's 1
+		// these typically don't come with seasons, so don't try to look for them.
 		// (at least, i haven't encountered them before)
 		auto regex = std::regex("(?:\\[.+?\\] *?)?(.+?)(?: +-)?(?: +|E|EP|e|ep|-|_)(\\d+)(?:.*)");
 		{

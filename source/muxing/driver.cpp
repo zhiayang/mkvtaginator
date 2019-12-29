@@ -373,7 +373,7 @@ namespace mux
 		auto select_matches = [&name](const std::vector<std::fs::path>& matches) -> std::fs::path {
 			if(matches.empty())
 			{
-				error("could not match subtitles with file '%s'", name);
+				error("could not match subtitles for file '%s'", name);
 				return "";
 			}
 
@@ -406,11 +406,10 @@ namespace mux
 				goto fail;
 
 			// for this, we need season/episode info, so even if you give the series id there's no point.
-			int manualSeason = 0;
 			if(!series.empty())
 			{
 				if(int x = config::getSeasonNumber(); x != -1)
-					season = x, manualSeason = x;
+					season = x;
 			}
 
 			// check all the files.
@@ -418,7 +417,7 @@ namespace mux
 			for(const auto& subfile : files)
 			{
 				auto [ srs, ssn, ep, ttl ] = tag::parseTVShow(subfile.filename().stem());
-				if(srs == series && (ssn == season || ssn == manualSeason) && ep == episode)
+				if(srs == series && (ssn == season || (season == -1 && ssn == -1)) && ep == episode)
 					matches.push_back(subfile);
 			}
 
@@ -446,7 +445,7 @@ namespace mux
 
 
 	fail:
-		error("could not match subtitles with file '%s'", name);
+		error("could not match subtitles for file '%s'", name);
 		return "";
 	}
 
