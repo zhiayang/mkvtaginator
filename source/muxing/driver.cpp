@@ -13,6 +13,12 @@ extern "C" {
 	#include <libavformat/avformat.h>
 }
 
+namespace misc
+{
+	// lmao
+	extern std::unordered_map<std::string, std::vector<std::string>> languageCodeMap;
+}
+
 namespace mux
 {
 	template <typename... Args>
@@ -250,7 +256,7 @@ namespace mux
 			auto cp = strm->codecpar;
 
 			auto lang = dict_get_value(strm->metadata, "language");
-			if(lang.empty()) lang = "unk";
+			if(lang.empty()) lang = "und";
 
 			auto codec = avcodec_get_name(cp->codec_id);
 			auto title = zpr::sprint("%s", codec);
@@ -458,6 +464,23 @@ namespace mux
 
 
 
+	static std::string guessLanguageFromTitle(const std::vector<std::string>& preferredLangs, std::string title)
+	{
+		title = util::lowercase(title);
+
+		for(const auto& lang : preferredLangs)
+		{
+			auto names = misc::languageCodeMap[lang];
+			for(const auto& x : names)
+			{
+				auto lx = util::lowercase(x);
+				if(title.find(lx) != std::string::npos)
+					return lang;
+			}
+		}
+
+		return "";
+	}
 
 
 	bool muxOneFile(std::fs::path& inputfile)
@@ -565,6 +588,9 @@ namespace mux
 					std::string lang = dict_get_value(strm->metadata, "language");
 					std::string name = dict_get_value(strm->metadata, "title");
 
+					// you motherfucker, releases files properly!!!
+					if(lang.empty()) lang = guessLanguageFromTitle(preferredAudioLangs, name);
+
 					audioStreamLangs[lang].push_back({ strm, util::lowercase(name) });
 				}
 				else if(strm->codecpar->codec_type == AVMEDIA_TYPE_SUBTITLE)
@@ -572,6 +598,9 @@ namespace mux
 					// hold off on selecting subs
 					std::string lang = dict_get_value(strm->metadata, "language");
 					std::string name = dict_get_value(strm->metadata, "title");
+
+					// you motherfucker, releases files properly!!!
+					if(lang.empty()) lang = guessLanguageFromTitle(preferredSubtitleLangs, name);
 
 					subtitleStreamLangs[lang].push_back({ strm, util::lowercase(name) });
 				}
