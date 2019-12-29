@@ -126,7 +126,7 @@ namespace tag::tvdb
 					util::info("multiple matches (detected series: %s):", name);
 
 					bool more = false;
-					size_t sel = misc::userChoice(options, &more, 0, limit);
+					sel = misc::userChoice(options, &more, 0, limit);
 
 					// if they wanted more, print the rest.
 					if(more)
@@ -203,16 +203,19 @@ namespace tag::tvdb
 					if(r.status_code != 404) util::info("body: %s", r.text);
 
 					util::unindent_log();
-					goto fail;
+
+					// actors isn't that important, so just skip it. no fail.
 				}
+				else
+				{
+					pj::value data;
+					pj::parse(data, r.text);
+					data = data.get("data");
 
-				pj::value data;
-				pj::parse(data, r.text);
-				data = data.get("data");
-
-				ret.actors = util::map(data.get<pj::array>(), [](const pj::value& v) -> auto {
-					return v.get("name").get<std::string>();
-				});
+					ret.actors = util::map(data.get<pj::array>(), [](const pj::value& v) -> auto {
+						return v.get("name").get<std::string>();
+					});
+				}
 			}
 
 

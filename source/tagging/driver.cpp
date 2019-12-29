@@ -463,6 +463,8 @@ namespace tag
 			if(!config::shouldRenameWithoutEpisodeTitle() && !meta.episodeTitle.empty())
 				newname += zpr::sprint(" - %s", meta.episodeTitle);
 
+			newname = util::sanitiseFilename(newname);
+
 			auto newpath = path.parent_path() / zpr::sprint("%s.mkv", newname);
 
 			if(!config::isDryRun())

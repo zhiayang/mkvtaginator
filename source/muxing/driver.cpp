@@ -657,7 +657,12 @@ namespace mux
 			{
 				util::log("using '%s' for subtitles", ss_filename);
 				if(!subtitleStrms.empty() || !subtitleStreamLangs.empty())
+				{
 					util::warn("ignoring all subtitle streams from input file");
+
+					subtitleStrms.clear();
+					subtitleStreamLangs.clear();
+				}
 
 				// pick streams from the secondary source.
 				std::vector<AVStream*> ss_videoStrms;

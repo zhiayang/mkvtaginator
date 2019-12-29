@@ -131,6 +131,24 @@ namespace util
 		return len;
 	}
 
+	std::string sanitiseFilename(std::string name)
+	{
+		const std::vector<char> blacklist = {
+			'/', '\\', ':', '<', '>', '|', '"', '?', '*'
+		};
+
+		for(size_t i = 0; i < name.size(); i++)
+		{
+			if(util::matchAny(blacklist, util::equals_to(name[i])))
+				name[i] = '_';
+		}
+
+		return name;
+	}
+
+
+
+
 #ifdef _MSC_VER
 #else
 	#pragma GCC diagnostic push

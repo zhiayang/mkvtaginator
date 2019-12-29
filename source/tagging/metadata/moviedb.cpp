@@ -145,7 +145,7 @@ namespace tag::moviedb
 				util::info("multiple matches:");
 
 				bool more = false;
-				size_t sel = misc::userChoice(options, &more, 0, limit);
+				sel = misc::userChoice(options, &more, 0, limit);
 
 				// if they wanted more, print the rest.
 				if(more)

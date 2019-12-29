@@ -180,6 +180,8 @@ namespace util
 	std::string uglyPrintTime(uint64_t ns, bool ms = true);
 
 	std::string getEnvironmentVar(const std::string& name);
+
+	std::string sanitiseFilename(std::string name);
 }
 
 namespace args

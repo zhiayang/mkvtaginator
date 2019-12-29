@@ -558,6 +558,16 @@ namespace util
 		template <typename T, typename U>
 		U operator() (const std::pair<T, U>& x) { return x.second; }
 	};
+
+	template <typename T>
+	struct equals_to
+	{
+		equals_to(const T& x) : value(x) { }
+		bool operator() (const T& x) { return x == this->value; }
+
+	private:
+		const T& value;
+	};
 }
 
 
