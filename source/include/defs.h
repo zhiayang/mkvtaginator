@@ -165,6 +165,14 @@ namespace util
 		return std::string(ltrim(rtrim(sv)));
 	}
 
+	static inline std::string lowercase(std::string xs)
+	{
+		for(size_t i = 0; i < xs.size(); i++)
+			xs[i] = tolower(xs[i]);
+
+		return xs;
+	}
+
 	// 1h 3m 14s
 	std::string prettyPrintTime(uint64_t ns, bool ms = true);
 

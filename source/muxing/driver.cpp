@@ -26,14 +26,6 @@ namespace mux
 		}
 	}
 
-	static std::string lowercase(std::string xs)
-	{
-		for(size_t i = 0; i < xs.size(); i++)
-			xs[i] = tolower(xs[i]);
-
-		return xs;
-	}
-
 	static std::pair<double, std::string> get_prefix(double x)
 	{
 		size_t idx = 0;
@@ -573,7 +565,7 @@ namespace mux
 					std::string lang = dict_get_value(strm->metadata, "language");
 					std::string name = dict_get_value(strm->metadata, "title");
 
-					audioStreamLangs[lang].push_back({ strm, lowercase(name) });
+					audioStreamLangs[lang].push_back({ strm, util::lowercase(name) });
 				}
 				else if(strm->codecpar->codec_type == AVMEDIA_TYPE_SUBTITLE)
 				{
@@ -581,7 +573,7 @@ namespace mux
 					std::string lang = dict_get_value(strm->metadata, "language");
 					std::string name = dict_get_value(strm->metadata, "title");
 
-					subtitleStreamLangs[lang].push_back({ strm, lowercase(name) });
+					subtitleStreamLangs[lang].push_back({ strm, util::lowercase(name) });
 				}
 				else
 				{
