@@ -417,7 +417,7 @@ namespace mux
 			for(const auto& subfile : files)
 			{
 				auto [ srs, ssn, ep, ttl ] = tag::parseTVShow(subfile.filename().stem());
-				if(srs == series && (ssn == season || (season == -1 && ssn == -1)) && ep == episode)
+				if(srs == series && (ssn == season || (season == -1 || ssn == -1)) && ep == episode)
 					matches.push_back(subfile);
 			}
 
