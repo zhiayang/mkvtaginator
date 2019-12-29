@@ -123,8 +123,8 @@ namespace tag
 					return { GenericMetadata(), "", nullptr };
 				}
 
-				util::info("tv: %s S%02dE%02d - %s", metadata.seriesMeta.name, metadata.seasonNumber,
-					metadata.episodeNumber, metadata.name);
+				util::info("tv: %s S%02dE%02d%s", metadata.seriesMeta.name, metadata.seasonNumber,
+					metadata.episodeNumber, metadata.name.empty() ? "" : zpr::sprint(" - %s", metadata.name));
 
 				auto xml = serialiseMetadata(metadata);
 
