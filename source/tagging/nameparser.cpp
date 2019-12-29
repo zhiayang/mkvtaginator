@@ -36,7 +36,7 @@ namespace tag
 
 		// these typically don't come with seasons, so we'll assume it's 1
 		// (at least, i haven't encountered them before)
-		auto regex = std::regex("(?:\\[.+\\] *)?(.+?)(?: +-)?(?: +|E|EP|e|ep|-|_)(\\d+)(?:.*)");
+		auto regex = std::regex("(?:\\[.+?\\] *?)?(.+?)(?: +-)?(?: +|E|EP|e|ep|-|_)(\\d+)(?:.*)");
 		{
 			std::smatch sm;
 			std::regex_match(filename, sm, regex);

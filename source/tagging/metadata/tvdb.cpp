@@ -123,7 +123,7 @@ namespace tag::tvdb
 					// TODO: make this configurable
 					constexpr size_t limit = 3;
 
-					util::info("multiple matches:");
+					util::info("multiple matches (detected series: %s):", name);
 
 					bool more = false;
 					size_t sel = misc::userChoice(options, &more, 0, limit);
