@@ -98,7 +98,7 @@ namespace mux
 		{
 			// is this even advisable??? subtitle files should be small, right??
 			std::deque<AVPacket*> ss_pkts;
-			while(true)
+			while(ssctx && true)
 			{
 				AVPacket pkt;
 				if(av_read_frame(ssctx, &pkt) < 0)
