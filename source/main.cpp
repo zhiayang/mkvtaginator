@@ -9,7 +9,6 @@ int main(int argc, char** argv)
 	config::readConfig();
 	auto files = args::parseCmdLineOpts(argc, argv);
 
-
 	util::info("received %zu %s", files.size(), util::plural("file", files.size()));
 
 	driver::createOutputFolder();

@@ -27,6 +27,7 @@
 #define ARG_PREFER_TEXT_SUBS        "--prefer-text-subs"
 #define ARG_PREFER_ENGLISH_TITLE    "--prefer-eng-title"
 #define ARG_PREFER_ORIGINAL_TITLE   "--prefer-orig-title"
+#define ARG_EXTRA_SUBS_FOLDER       "--extra-subs-folder"
 #define ARG_PREFER_ONE_STREAM       "--prefer-one-stream"
 #define ARG_OVERRIDE_MOVIE_NAME     "--override-movie-name"
 #define ARG_OVERRIDE_SERIES_NAME    "--override-series-name"
@@ -49,6 +50,10 @@ static void setupMap()
 
 	helpList.push_back({ ARG_TAG,
 		"enable metadata tagging"
+	});
+
+	helpList.push_back({ ARG_EXTRA_SUBS_FOLDER,
+		"automatically find/extract subtitles from matching files in the given folder"
 	});
 
 	helpList.push_back({ ARG_MANUAL_SEASON,
@@ -301,6 +306,21 @@ namespace args
 					else
 					{
 						util::error("%serror:%s expected id after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
+						exit(-1);
+					}
+				}
+				else if(!strcmp(argv[i], ARG_EXTRA_SUBS_FOLDER))
+				{
+					if(i != argc - 1)
+					{
+						i++;
+						config::setExtraSubsPath(argv[i]);
+						continue;
+					}
+					else
+					{
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
 							argv[i]);
 						exit(-1);
 					}

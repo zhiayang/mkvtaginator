@@ -195,9 +195,13 @@ namespace misc
 						pretty_print_text_block(info.body, lm.c_str(), rm.c_str(), /* max_lines: */ 3);
 					}
 				}
-			}
 
-			zpr::println("");
+				zpr::println("");
+			}
+			else if(i + 1 == size)
+			{
+				zpr::println("");
+			}
 		}
 
 		bool more = false;

@@ -191,6 +191,7 @@ namespace config
 	std::string getMovieDBApiKey();
 	std::string getTVDBApiKey();
 	std::string getConfigPath();
+	std::string getExtraSubsPath();
 
 	std::vector<std::string> getAudioLangs();
 	std::vector<std::string> getSubtitleLangs();
@@ -239,6 +240,7 @@ namespace config
 	void setMovieDBApiKey(const std::string& x);
 	void setTVDBApiKey(const std::string& x);
 	void setConfigPath(const std::string& x);
+	void setExtraSubsPath(const std::string& x);
 	void setIsOverridingMovieName(bool x);
 	void setIsOverridingSeriesName(bool x);
 	void setIsOverridingEpisodeName(bool x);
