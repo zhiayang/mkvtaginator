@@ -90,7 +90,7 @@ namespace util
 		auto bad = std::pair(nullptr, 0);;
 
 		auto sz = getFileSize(path);
-		if(sz == -1) return bad;
+		if(sz == static_cast<size_t>(-1)) return bad;
 
 		// i'm lazy, so just use fstreams.
 		auto fs = std::fstream(path);
