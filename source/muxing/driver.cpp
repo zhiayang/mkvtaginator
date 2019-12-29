@@ -601,7 +601,7 @@ namespace mux
 					for(const auto& [ strm, name ] : strms)
 					{
 						// if there's commentary, don't select it.
-						if(name.find("commentary") != -1 || name.find("director") != -1)
+						if(name.find("commentary") != std::string::npos || name.find("director") != std::string::npos)
 							continue;
 
 						// idk what else to filter on, so just include it.
@@ -628,16 +628,16 @@ namespace mux
 					for(const auto& [ strm, name ] : strms)
 					{
 						// if there's commentary, don't select it.
-						if(name.find("commentary") != -1 || name.find("director") != -1)
+						if(name.find("commentary") != std::string::npos || name.find("director") != std::string::npos)
 							continue;
 
 						// if you don't prefer SDH, don't use SDH.
-						if(name.find("sdh") != -1 && !preferSDH)
+						if(name.find("sdh") != std::string::npos && !preferSDH)
 							continue;
 
 						// if you don't prefer sign/song subs, then don't. (this assumes nobody puts
 						// the words "signs" or "songs" in the name...)
-						else if((name.find("signs") != -1 || name.find("songs") != -1) && !preferSigns)
+						else if((name.find("signs") != std::string::npos || name.find("songs") != std::string::npos) && !preferSigns)
 							continue;
 
 						// if you prefer text subs, make sure it's ass or srt.

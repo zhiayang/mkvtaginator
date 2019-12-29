@@ -286,7 +286,7 @@ namespace misc
 			{
 				n = sscanf(x.c_str(), "%d", &a);
 
-				if(n <= 0 || a > options.size())
+				if(n <= 0 || static_cast<size_t>(a) > options.size())
 					util::error("ignoring invalid input '%s'", x);
 
 				else
@@ -296,7 +296,7 @@ namespace misc
 			{
 				if(b < a) std::swap(a, b);
 
-				if(a < 1 || b > options.size())
+				if(a < 1 || static_cast<size_t>(b) > options.size())
 					util::error("truncating invalid range");
 
 				a = std::max(a, 1);

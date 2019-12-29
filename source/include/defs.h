@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include <filesystem>
 
@@ -148,14 +149,14 @@ namespace util
 	{
 		auto ltrim = [](std::string_view& s) -> std::string_view& {
 			auto i = s.find_first_not_of(" \t\n\r\f\v");
-			if(i != -1) s.remove_prefix(i);
+			if(i != std::string::npos) s.remove_prefix(i);
 
 			return s;
 		};
 
 		auto rtrim = [](std::string_view& s) -> std::string_view& {
 			auto i = s.find_last_not_of(" \t\n\r\f\v");
-			if(i != -1) s = s.substr(0, i + 1);
+			if(i != std::string::npos) s = s.substr(0, i + 1);
 
 			return s;
 		};
