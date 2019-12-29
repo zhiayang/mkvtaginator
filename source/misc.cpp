@@ -225,11 +225,15 @@ namespace misc
 		zpr::print("%s %s*%s selection [%d - %d, 0 to skip%s]: ", std::string(2 * util::get_log_indent(), ' '),
 			COLOUR_BLUE_BOLD, COLOUR_RESET, 1, size, more ? ", 'm' for more" : "");
 
+		std::string input;
+		std::getline(std::cin, input);
+		input = util::trim(input);
+
 		int x = 0;
-		int n = fscanf(stdin, "%d", &x);
+		int n = sscanf(input.c_str(), "%d", &x);
 		if(n <= 0 || x <= 0 || static_cast<size_t>(x) > options.size())
 		{
-			if(fgetc(stdin) == 'm' && showmore)
+			if(!input.empty() && input[0] == 'm' && showmore)
 			{
 				*showmore = true;
 				return 0;
