@@ -116,6 +116,9 @@ namespace tag
 				if(int x = config::getSeasonNumber(); x != -1)
 					season = x;
 
+				if(int x = config::getEpisodeNumber(); x != -1)
+					episode = x;
+
 				// if there's no season, assume 1.
 				if(season == -1)
 					season = 1;

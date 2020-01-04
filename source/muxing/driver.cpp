@@ -432,6 +432,9 @@ namespace mux
 			{
 				if(int x = config::getSeasonNumber(); x != -1)
 					season = x;
+
+				if(int x = config::getEpisodeNumber(); x != -1)
+					episode = x;
 			}
 
 			// check all the files.

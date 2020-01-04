@@ -228,6 +228,7 @@ namespace config
 	bool isPreferEnglishTitle();
 	bool disableAutoCoverSearch();
 	int getSeasonNumber();
+	int getEpisodeNumber();
 
 
 	bool isMuxing();
@@ -243,6 +244,7 @@ namespace config
 	void setPreferSignSongSubs(bool x);
 	void setSkipNCOPNCED(bool x);
 	void setSeasonNumber(int x);
+	void setEpisodeNumber(int x);
 
 	void setOutputFolder(const std::string& x);
 	void setManualMovieId(const std::string& x);

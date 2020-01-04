@@ -10,6 +10,8 @@ int main(int argc, char** argv)
 	auto files = args::parseCmdLineOpts(argc, argv);
 
 	util::info("received %zu %s", files.size(), util::plural("file", files.size()));
+	if(config::getEpisodeNumber() != -1 && files.size() > 1)
+		util::warn("warn: using '--episode' with more than one input file");
 
 	driver::createOutputFolder();
 

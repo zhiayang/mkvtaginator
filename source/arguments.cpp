@@ -13,6 +13,7 @@
 #define ARG_SERIES_ID               "--series"
 #define ARG_RENAME_FILES            "--rename"
 #define ARG_MANUAL_SEASON           "--season"
+#define ARG_MANUAL_EPISODE          "--episode"
 #define ARG_DRY_RUN                 "--dry-run"
 #define ARG_TVDB_API_KEY            "--tvdb-api"
 #define ARG_MOVIEDB_API_KEY         "--moviedb-api"
@@ -58,6 +59,10 @@ static void setupMap()
 
 	helpList.push_back({ ARG_MANUAL_SEASON,
 		"specify the season number manually (most useful together with '--series')"
+	});
+
+	helpList.push_back({ ARG_MANUAL_EPISODE,
+		"specify the episode number manually (most useful together with '--series' and '--season')"
 	});
 
 	helpList.push_back({ ARG_SERIES_ID,
@@ -470,6 +475,29 @@ namespace args
 					else
 					{
 					not_number:
+						util::error("%serror:%s expected (positive) integer after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
+						exit(-1);
+					}
+				}
+				else if(!strcmp(argv[i], ARG_MANUAL_EPISODE))
+				{
+					if(i != argc - 1)
+					{
+						i++;
+						std::string str = argv[i];
+
+						for(char c : str)
+						{
+							if(c < '0' || c > '9')
+								goto not_number;    // note: this jumps to the not_number above, which i guess is fine.
+						}
+
+						config::setEpisodeNumber(std::stoi(str));
+						continue;
+					}
+					else
+					{
 						util::error("%serror:%s expected (positive) integer after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
 							argv[i]);
 						exit(-1);
