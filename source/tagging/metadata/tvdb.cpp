@@ -218,8 +218,10 @@ namespace tag::tvdb
 				}
 			}
 
+			if(auto x = config::getManualSeriesTitle(); !x.empty())
+				ret.name = x;
 
-			if(config::isOverridingSeriesName())
+			else if(config::isOverridingSeriesName())
 				ret.name = name;
 		}
 
