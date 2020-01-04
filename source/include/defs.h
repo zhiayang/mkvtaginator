@@ -203,6 +203,7 @@ namespace config
 	std::string getTVDBApiKey();
 	std::string getConfigPath();
 	std::string getExtraSubsPath();
+	std::string getManualSeriesTitle();
 
 	std::vector<std::string> getAudioLangs();
 	std::vector<std::string> getSubtitleLangs();
@@ -246,6 +247,7 @@ namespace config
 	void setSeasonNumber(int x);
 	void setEpisodeNumber(int x);
 
+	void setManualSeriesTitle(const std::string& x);
 	void setOutputFolder(const std::string& x);
 	void setManualMovieId(const std::string& x);
 	void setManualSeriesId(const std::string& x);

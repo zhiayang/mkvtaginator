@@ -19,6 +19,7 @@
 #define ARG_MOVIEDB_API_KEY         "--moviedb-api"
 #define ARG_NO_PROGRESS             "--no-progress"
 #define ARG_AUDIO_LANGS             "--audio-langs"
+#define ARG_MANUAL_SERIES_TITLE     "--series-title"
 #define ARG_OUTPUT_FOLDER           "--output-folder"
 #define ARG_NO_AUTO_COVER           "--no-auto-cover"
 #define ARG_STOP_ON_ERROR           "--stop-on-error"
@@ -51,6 +52,10 @@ static void setupMap()
 
 	helpList.push_back({ ARG_TAG,
 		"enable metadata tagging"
+	});
+
+	helpList.push_back({ ARG_MANUAL_SERIES_TITLE,
+		"override the series title with the given string"
 	});
 
 	helpList.push_back({ ARG_EXTRA_SUBS_FOLDER,
@@ -315,6 +320,21 @@ namespace args
 						exit(-1);
 					}
 				}
+				else if(!strcmp(argv[i], ARG_MANUAL_SERIES_TITLE))
+				{
+					if(i != argc - 1)
+					{
+						i++;
+						config::setManualSeriesTitle(argv[i]);
+						continue;
+					}
+					else
+					{
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
+						exit(-1);
+					}
+				}
 				else if(!strcmp(argv[i], ARG_EXTRA_SUBS_FOLDER))
 				{
 					if(i != argc - 1)
@@ -460,8 +480,7 @@ namespace args
 				{
 					if(i != argc - 1)
 					{
-						i++;
-						std::string str = argv[i];
+						std::string str = argv[i + 1];
 
 						for(char c : str)
 						{
@@ -469,6 +488,7 @@ namespace args
 								goto not_number;
 						}
 
+						i++;
 						config::setSeasonNumber(std::stoi(str));
 						continue;
 					}
@@ -484,8 +504,7 @@ namespace args
 				{
 					if(i != argc - 1)
 					{
-						i++;
-						std::string str = argv[i];
+						std::string str = argv[i + 1];
 
 						for(char c : str)
 						{
@@ -493,6 +512,7 @@ namespace args
 								goto not_number;    // note: this jumps to the not_number above, which i guess is fine.
 						}
 
+						i++;
 						config::setEpisodeNumber(std::stoi(str));
 						continue;
 					}

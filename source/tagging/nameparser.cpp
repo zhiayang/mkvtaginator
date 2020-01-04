@@ -24,7 +24,7 @@ namespace tag
 		return name;
 	}
 
-	static std::tuple<std::string, int, int, std::string> parseStrangeTVShow(const std::string& filename)
+	static std::tuple<std::string, int, int, std::string> parseStrangeTVShow(const std::string& _filename)
 	{
 		// morally questionable sources, i say?
 
@@ -34,6 +34,19 @@ namespace tag
 
 		// callers know how to handle this -- if -1, then assume 1.
 		int season = -1;
+
+		// this is a very dirty hack, but it works.
+		std::string filename = _filename;
+		constexpr const char* hacky_marker = "____________________________________";
+		if(auto mst = config::getManualSeriesTitle(); !mst.empty() && filename.find(mst) != std::string::npos)
+		{
+			// ok, replace that shit with a special identifer, so it doesn't affect the regex.
+			// this problem was discovered when trying to process Steins;Gate 0, which, as you
+			// might guess, messes up the regex due to '0'.
+
+			filename.replace(filename.find(mst), mst.size(), hacky_marker);
+		}
+
 
 		// these typically don't come with seasons, so don't try to look for them.
 		// (at least, i haven't encountered them before)
@@ -65,6 +78,9 @@ namespace tag
 				}
 			}
 		}
+
+		if(auto mst = config::getManualSeriesTitle(); !mst.empty())
+			series = mst;
 
 		series = sanitiseName(series);
 		return std::tuple(series, season, episode, title);
