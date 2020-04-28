@@ -299,7 +299,7 @@ namespace tag::tvdb
 
 			ret.actors = ret.seriesMeta.actors;
 
-			if(config::isOverridingEpisodeName())
+			if(config::isOverridingEpisodeName() && !title.empty())
 				ret.name = title;
 		}
 
