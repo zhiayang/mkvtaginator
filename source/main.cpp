@@ -119,7 +119,7 @@ namespace driver
 
 			if(auto out = config::getOutputFolder(); !out.empty())
 			{
-				if(std::fs::equivalent(std::fs::canonical(filepath.parent_path()),
+				if(std::fs::equivalent(std::fs::canonical(filepath).parent_path(),
 					std::fs::canonical(std::fs::path(out))))
 				{
 					util::error("skipping input file overlapping with output folder");

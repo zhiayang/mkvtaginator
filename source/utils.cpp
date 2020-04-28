@@ -21,6 +21,7 @@
 #endif
 
 #include <stdlib.h>
+#include <locale.h>
 #include <fstream>
 
 extern int wcwidth(wchar_t ucs);
@@ -106,6 +107,9 @@ namespace util
 
 	std::wstring corruptUTF8ToWChar(const std::string& str)
 	{
+		// give us UTF-8.
+		std::setlocale(LC_ALL, "en_US.UTF-8");
+
 	    std::mbstate_t state = std::mbstate_t();
 	    const char* s = str.c_str();
 
@@ -117,6 +121,8 @@ namespace util
 	    auto ret = std::wstring(buf, len - 1);
 	    delete[] buf;
 
+		// restore the locale.
+		std::setlocale(LC_ALL, "");
 	    return ret;
 	}
 
