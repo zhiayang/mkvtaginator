@@ -4,39 +4,42 @@
 
 #include "defs.h"
 
-#define ARG_HELP                    "--help"
-#define ARG_MUX                     "--mux"
-#define ARG_TAG                     "--tag"
-#define ARG_COVER_IMAGE             "--cover"
-#define ARG_MOVIE_ID                "--movie"
-#define ARG_CONFIG_PATH             "--config"
-#define ARG_SERIES_ID               "--series"
-#define ARG_RENAME_FILES            "--rename"
-#define ARG_MANUAL_SEASON           "--season"
-#define ARG_MANUAL_EPISODE          "--episode"
-#define ARG_DRY_RUN                 "--dry-run"
-#define ARG_TVDB_API_KEY            "--tvdb-api"
-#define ARG_MOVIEDB_API_KEY         "--moviedb-api"
-#define ARG_NO_PROGRESS             "--no-progress"
-#define ARG_AUDIO_LANGS             "--audio-langs"
-#define ARG_MANUAL_SERIES_TITLE     "--series-title"
-#define ARG_OUTPUT_FOLDER           "--output-folder"
-#define ARG_NO_AUTO_COVER           "--no-auto-cover"
-#define ARG_STOP_ON_ERROR           "--stop-on-error"
-#define ARG_SUBTITLE_LANGS          "--subtitle-langs"
-#define ARG_SKIP_NCOP_NCED          "--skip-ncop-nced"
-#define ARG_PREFER_SDH_SUBS         "--prefer-sdh-subs"
-#define ARG_PREFER_TEXT_SUBS        "--prefer-text-subs"
-#define ARG_PREFER_ENGLISH_TITLE    "--prefer-eng-title"
-#define ARG_PREFER_ORIGINAL_TITLE   "--prefer-orig-title"
-#define ARG_EXTRA_SUBS_FOLDER       "--extra-subs-folder"
-#define ARG_PREFER_ONE_STREAM       "--prefer-one-stream"
-#define ARG_OVERRIDE_MOVIE_NAME     "--override-movie-name"
-#define ARG_OVERRIDE_SERIES_NAME    "--override-series-name"
-#define ARG_OVERRIDE_EPISODE_NAME   "--override-episode-name"
-#define ARG_DELETE_EXISTING_OUTPUT  "--delete-existing-output"
-#define ARG_PREFER_SIGN_SONG_SUBS   "--prefer-signs-songs-subs"
-#define ARG_NO_SMART_REPLACE_COVER  "--no-smart-replace-cover-art"
+#define ARG_HELP                            "--help"
+#define ARG_VERSION                         "--version"
+
+#define ARG_MUX                             "--mux"
+#define ARG_TAG                             "--tag"
+#define ARG_COVER_IMAGE                     "--cover"
+#define ARG_MOVIE_ID                        "--movie"
+#define ARG_CONFIG_PATH                     "--config"
+#define ARG_SERIES_ID                       "--series"
+#define ARG_RENAME_FILES                    "--rename"
+#define ARG_MANUAL_SEASON                   "--season"
+#define ARG_MANUAL_EPISODE                  "--episode"
+#define ARG_DRY_RUN                         "--dry-run"
+#define ARG_TVDB_API_KEY                    "--tvdb-api"
+#define ARG_MOVIEDB_API_KEY                 "--moviedb-api"
+#define ARG_NO_PROGRESS                     "--no-progress"
+#define ARG_AUDIO_LANGS                     "--audio-langs"
+#define ARG_MANUAL_SERIES_TITLE             "--series-title"
+#define ARG_OUTPUT_FOLDER                   "--output-folder"
+#define ARG_NO_AUTO_COVER                   "--no-auto-cover"
+#define ARG_STOP_ON_ERROR                   "--stop-on-error"
+#define ARG_SUBTITLE_LANGS                  "--subtitle-langs"
+#define ARG_SKIP_NCOP_NCED                  "--skip-ncop-nced"
+#define ARG_PREFER_SDH_SUBS                 "--prefer-sdh-subs"
+#define ARG_PREFER_TEXT_SUBS                "--prefer-text-subs"
+#define ARG_PREFER_ENGLISH_TITLE            "--prefer-eng-title"
+#define ARG_PREFER_ORIGINAL_TITLE           "--prefer-orig-title"
+#define ARG_EXTRA_SUBS_FOLDER               "--extra-subs-folder"
+#define ARG_PREFER_ONE_STREAM               "--prefer-one-stream"
+#define ARG_OVERRIDE_MOVIE_NAME             "--override-movie-name"
+#define ARG_OVERRIDE_SERIES_NAME            "--override-series-name"
+#define ARG_OVERRIDE_EPISODE_NAME           "--override-episode-name"
+#define ARG_DELETE_EXISTING_OUTPUT          "--delete-existing-output"
+#define ARG_PREFER_SIGN_SONG_SUBS           "--prefer-signs-songs-subs"
+#define ARG_NO_SMART_REPLACE_COVER          "--no-smart-replace-cover-art"
+#define ARG_RENAME_WITH_EPISODE_TITLE       "--rename-with-episode-title"
 
 
 static std::vector<std::pair<std::string, std::string>> helpList;
@@ -159,6 +162,10 @@ static void setupMap()
 		"always reattach attachments, even those that are detected to be existing cover art attachments"
 	});
 
+	helpList.push_back({ ARG_RENAME_WITH_EPISODE_TITLE,
+		"include the episode title when renaming the file (for series)"
+	});
+
 	helpList.push_back({ ARG_PREFER_ORIGINAL_TITLE,
 		"prefer the original-language title (if available) rather than the anglicised one (for foreign content) -- this is the default"
 	});
@@ -176,11 +183,19 @@ static void setupMap()
 	});
 }
 
+static constexpr const char* VERSION = "1.0.0";
+static void printVersion()
+{
+	printf("mkvtaginator version %s\n\n", VERSION);
+}
+
+
 static void printHelp()
 {
 	if(helpList.empty())
 		setupMap();
 
+	printVersion();
 	printf("usage: mkvtaginator [options] <inputs>\n\n");
 
 	printf("options:\n");
@@ -265,6 +280,11 @@ namespace args
 			if(!strcmp(argv[i], ARG_HELP))
 			{
 				printHelp();
+				exit(0);
+			}
+			else if(!strcmp(argv[i], ARG_VERSION))
+			{
+				printVersion();
 				exit(0);
 			}
 		}
@@ -434,6 +454,11 @@ namespace args
 				else if(!strcmp(argv[i], ARG_SKIP_NCOP_NCED))
 				{
 					config::setSkipNCOPNCED(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_RENAME_WITH_EPISODE_TITLE))
+				{
+					config::setShouldRenameWithoutEpisodeTitle(false);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_AUDIO_LANGS))

@@ -517,6 +517,7 @@ namespace mux
 		if(avformat_find_stream_info(ctx, nullptr) < 0)
 		{
 			error("failed to read streams");
+			avformat_close_input(&ctx);
 			return false;
 		}
 
