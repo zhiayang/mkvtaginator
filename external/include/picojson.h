@@ -819,11 +819,25 @@ template <typename Context, typename Iter> inline bool _parse_array(Context &ctx
     return ctx.parse_array_stop(idx);
   }
   do {
+    while (in.expect('/') && in.expect('/')) {
+      // consume.
+      while(*in.cur_ != '\n' && in.cur_ != in.end_)
+        in.cur_++;
+      in.line_++;
+    }
+
     if (!ctx.parse_array_item(in, idx)) {
       return false;
     }
     idx++;
   } while (in.expect(','));
+
+  while (in.expect('/') && in.expect('/')) {
+    // consume.
+    while(*in.cur_ != '\n' && in.cur_ != in.end_)
+      in.cur_++;
+    in.line_++;
+  }
   return in.expect(']') && ctx.parse_array_stop(idx);
 }
 
@@ -850,6 +864,13 @@ template <typename Context, typename Iter> inline bool _parse_object(Context &ct
       return false;
     }
   } while (in.expect(','));
+
+  while (in.expect('/') && in.expect('/')) {
+    // consume.
+    while(*in.cur_ != '\n' && in.cur_ != in.end_)
+      in.cur_++;
+    in.line_++;
+  }
   return in.expect('}');
 }
 
