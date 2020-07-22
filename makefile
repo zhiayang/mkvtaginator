@@ -59,6 +59,7 @@ endif
 
 .PHONY: clean all
 
+build: all
 all: $(OUTPUT)
 
 

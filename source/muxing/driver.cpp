@@ -88,10 +88,16 @@ namespace mux
 		// av_dump_format(outctx, 0, "url", 1);
 
 		// short circuiting. open + write header
-		if(avio_open(&outctx->pb, outfile.string().c_str(), AVIO_FLAG_WRITE) < 0
-			|| avformat_write_header(outctx, nullptr) < 0)
+		if(avio_open(&outctx->pb, outfile.string().c_str(), AVIO_FLAG_WRITE) < 0)
 		{
 			error("failed to open output file for writing");
+			return false;
+		}
+
+		outctx->max_interleave_delta = 0;
+		if(avformat_write_header(outctx, nullptr) < 0)
+		{
+			error("failed to write header");
 			return false;
 		}
 
