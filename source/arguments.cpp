@@ -18,6 +18,7 @@
 #define ARG_MANUAL_EPISODE                  "--episode"
 #define ARG_DRY_RUN                         "--dry-run"
 #define ARG_TVDB_API_KEY                    "--tvdb-api"
+#define ARG_USE_SUBTITLE                    "--subtitles"
 #define ARG_MOVIEDB_API_KEY                 "--moviedb-api"
 #define ARG_NO_PROGRESS                     "--no-progress"
 #define ARG_AUDIO_LANGS                     "--audio-langs"
@@ -61,8 +62,12 @@ static void setupMap()
 		"override the series title with the given string"
 	});
 
+	helpList.push_back({ ARG_USE_SUBTITLE,
+		"specify the subtitle file to use (useful for single files)"
+	});
+
 	helpList.push_back({ ARG_EXTRA_SUBS_FOLDER,
-		"automatically find/extract subtitles from matching files in the given folder"
+		"automatically find/extract subtitles from matching files in the given folder (useful for batch processing)"
 	});
 
 	helpList.push_back({ ARG_MANUAL_SEASON,
@@ -183,7 +188,7 @@ static void setupMap()
 	});
 }
 
-static constexpr const char* VERSION = "1.0.0";
+static constexpr const char* VERSION = "1.1.0";
 static void printVersion()
 {
 	printf("mkvtaginator version %s\n\n", VERSION);
@@ -361,6 +366,21 @@ namespace args
 					{
 						i++;
 						config::setExtraSubsPath(argv[i]);
+						continue;
+					}
+					else
+					{
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
+						exit(-1);
+					}
+				}
+				else if(!strcmp(argv[i], ARG_USE_SUBTITLE))
+				{
+					if(i != argc - 1)
+					{
+						i++;
+						config::setManualSubsPath(argv[i]);
 						continue;
 					}
 					else

@@ -41,6 +41,10 @@ extension will always be `mkv`.
 If, for some reason, you need to manually specify the season number, you can use `--season <N>`.
 
 
+### Building
+
+As mentioned, install `mkvtoolnix`, `libcurl`, and `libavformat`. Then, simply run `make`; the output binary will be `build/mkvtaginator`.
+
 
 ### Muxing
 
@@ -105,6 +109,8 @@ If the first attachment (and only the first) is detected to be cover art (with m
 `cover.{png,jpg}`), then it is simply replaced outright -- the old cover art will not be extracted and re-attached. This prevents
 cover art attachments from "accumulating" when `mkvtaginator` is run mutliple times on the same file. To disable this behaviour,
 use `--no-smart-replace-cover-art`.
+
+Also, I'm not sure how well this works with filenames/paths containing spaces, so please do a dry-run first.
 
 
 ### Contributing

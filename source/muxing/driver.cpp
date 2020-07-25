@@ -368,6 +368,18 @@ namespace mux
 
 	static std::fs::path getExtraSubtitleSource(const std::string& name)
 	{
+		if(auto manual = config::getManualSubsPath(); !manual.empty())
+		{
+			if(!std::fs::exists(manual))
+			{
+				error("subtitle input '%s' does not exist", manual);
+				config::setManualSubsPath("");
+				return "";
+			}
+
+			return std::fs::path(manual);
+		}
+
 		if(config::getExtraSubsPath().empty())
 			return "";
 
@@ -596,7 +608,7 @@ namespace mux
 				if(strm->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
 				{
 					// if this is a picture, then add it as an attachment.
-					if(util::match(avcodec_get_name(strm->codecpar->codec_id), "mjpeg", "png"))
+					if(util::match(avcodec_get_name(strm->codecpar->codec_id), std::string("mjpeg"), std::string("png")))
 					{
 						selectedStreams.insert(strm);
 					}
@@ -713,7 +725,7 @@ namespace mux
 				util::log("using '%s' for subtitles", ss_filename);
 				if(!subtitleStrms.empty() || !subtitleStreamLangs.empty())
 				{
-					util::warn("ignoring all subtitle streams from input file");
+					util::warn("ignoring all subtitle streams from input file due to override");
 
 					subtitleStrms.clear();
 					subtitleStreamLangs.clear();

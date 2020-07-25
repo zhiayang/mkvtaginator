@@ -239,6 +239,7 @@ namespace config
 	static std::string tvdbApiKey;
 	static std::string moviedbApiKey;
 	static std::string extraSubsPath;
+	static std::string manualSubsPath;
 	static std::string manualSeriesTitle;
 
 	static std::vector<std::string> audioLangs;
@@ -285,6 +286,7 @@ namespace config
 	std::string getMovieDBApiKey()          { return moviedbApiKey; }
 	std::string getConfigPath()             { return configPath; }
 	std::string getExtraSubsPath()          { return extraSubsPath; }
+	std::string getManualSubsPath()         { return manualSubsPath; }
 	std::string getManualSeriesTitle()      { return manualSeriesTitle; }
 	bool isOverridingMovieName()            { return overrideMovieName; }
 	bool isOverridingSeriesName()           { return overrideSeriesName; }
@@ -315,6 +317,7 @@ namespace config
 	void setTVDBApiKey(const std::string& x)        { tvdbApiKey = x; }
 	void setMovieDBApiKey(const std::string& x)     { moviedbApiKey = x; }
 	void setExtraSubsPath(const std::string& x)     { extraSubsPath = x; }
+	void setManualSubsPath(const std::string& x)    { manualSubsPath = x; }
 	void setManualSeriesTitle(const std::string& x) { manualSeriesTitle = x; }
 	void setDisableAutoCoverSearch(bool x)          { noAutoCover = x; }
 	void setIsDryRun(bool x)                        { dryrun = x; }
