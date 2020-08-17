@@ -336,6 +336,10 @@ namespace tag
 		std::string name;
 		std::string airDate;
 
+		// the names according to the online source. since we can
+		// override it, we need to preserve what we found for display.
+		std::string dbName;
+
 		std::vector<std::string> genres;
 		std::vector<std::string> actors;
 	};
@@ -353,6 +357,10 @@ namespace tag
 		std::string synopsis;
 		std::string description;
 
+		// the names according to the online source. since we can
+		// override it, we need to preserve what we found for display.
+		std::string dbName;
+
 		std::vector<std::string> actors;
 		std::vector<std::string> artists;
 		std::vector<std::string> writers;
@@ -366,6 +374,8 @@ namespace tag
 
 		std::string airDate;
 		std::string synopsis;
+
+		std::string dbTitle;
 
 		// { actor name, character played }
 		std::vector<std::pair<std::string, std::string>> cast;

@@ -192,7 +192,7 @@ namespace tag::moviedb
 			pj::value data;
 			pj::parse(data, r.text);
 
-			ret.title           = data.get("title").get<std::string>();
+			ret.dbTitle         = data.get("title").get<std::string>();
 			ret.originalTitle   = data.get("original_title").get<std::string>();
 			ret.airDate         = data.get("release_date").get<std::string>();
 			{
@@ -285,6 +285,8 @@ namespace tag::moviedb
 					});
 				}
 			}
+
+			ret.title = ret.dbTitle;
 
 			// ok. if we're overriding, then override:
 			if(config::isOverridingMovieName() && !title.empty())

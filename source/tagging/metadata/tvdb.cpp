@@ -182,7 +182,7 @@ namespace tag::tvdb
 			pj::parse(resp, r.text);
 			auto data = resp.get("data");
 
-			ret.name    = data.get("seriesName").get<std::string>();
+			ret.dbName  = data.get("seriesName").get<std::string>();
 			ret.airDate = format_date(data.get("firstAired").get<std::string>());
 			ret.genres  = util::map(data.get("genre").get<pj::array>(), [](const pj::value& x) -> std::string {
 				return x.get<std::string>();
@@ -217,6 +217,8 @@ namespace tag::tvdb
 					});
 				}
 			}
+
+			ret.name = ret.dbName;
 
 			if(auto x = config::getManualSeriesTitle(); !x.empty())
 				ret.name = x;
@@ -282,22 +284,23 @@ namespace tag::tvdb
 			if(auto ovv = data.get("overview"); !ovv.is<pj::null>())
 				ret.description = ovv.get<std::string>();
 
-			ret.synopsis        = ret.description.empty()
+			ret.synopsis = ret.description.empty()
 				? "" : ret.description.substr(0, 250);
 
 			if(ret.description.size() > 250)
 				ret.synopsis += "...";
 
 			if(auto epName = data.get("episodeName"); !epName.is<pj::null>())
-				ret.name            = epName.get<std::string>();
+				ret.dbName = epName.get<std::string>();
 
-			ret.writers         = util::map(data.get("writers").get<pj::array>(),
+			ret.writers = util::map(data.get("writers").get<pj::array>(),
 				[](const pj::value& v) -> auto { return v.get<std::string>(); });
 
-			ret.directors       = util::map(data.get("directors").get<pj::array>(),
+			ret.directors = util::map(data.get("directors").get<pj::array>(),
 				[](const pj::value& v) -> auto { return v.get<std::string>(); });
 
 			ret.actors = ret.seriesMeta.actors;
+			ret.name = ret.dbName;
 
 			if(config::isOverridingEpisodeName() && !title.empty())
 				ret.name = title;

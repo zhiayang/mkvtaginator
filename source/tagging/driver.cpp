@@ -130,8 +130,8 @@ namespace tag
 					return { GenericMetadata(), "", nullptr };
 				}
 
-				util::info("tv: %s S%02dE%02d%s", metadata.seriesMeta.name, metadata.seasonNumber,
-					metadata.episodeNumber, metadata.name.empty() ? "" : zpr::sprint(" - %s", metadata.name));
+				util::info("tv: %s S%02dE%02d%s", metadata.seriesMeta.dbName, metadata.seasonNumber,
+					metadata.episodeNumber, metadata.dbName.empty() ? "" : zpr::sprint(" - %s", metadata.dbName));
 
 				auto xml = serialiseMetadata(metadata);
 
@@ -175,7 +175,7 @@ namespace tag
 				return { GenericMetadata(), "", nullptr };
 			}
 
-			util::info("movie: %s (%d)", metadata.title, metadata.year);
+			util::info("movie: %s (%d)", metadata.dbTitle, metadata.year);
 
 			metadata.normalTitle = zpr::sprint("%s", metadata.title);
 			metadata.canonicalTitle = zpr::sprint("%s (%d)", metadata.title, metadata.year);
@@ -476,7 +476,7 @@ namespace tag
 
 			if(!config::isDryRun())
 			{
-				util::log("renaming file");
+				util::log("renaming file: '%s'", newpath.filename().string());
 				std::fs::rename(path, newpath);
 			}
 			else
