@@ -54,7 +54,7 @@ namespace mux
 
 	// refer: https://github.com/FFmpeg/FFmpeg/blob/10bcc41bb40ba479bfc5ad29b1650a6b335437a8/doc/examples/remuxing.c
 	static bool writeOutput(const std::fs::path& outfile, AVFormatContext* inctx, AVFormatContext* ssctx,
-		const std::vector<AVStream*>& finalStreams, std::unordered_map<AVStream*, size_t>& finalStreamMap)
+		const std::vector<AVStream*>& finalStreams, std::unordered_map<AVStream*, size_t>& finalStreamMap, double subtitleDelay)
 	{
 		AVFormatContext* outctx = 0;
 		if(avformat_alloc_output_context2(&outctx, nullptr, "matroska", outfile.string().c_str()) < 0)
@@ -105,7 +105,7 @@ namespace mux
 		int64_t maxPts = 0;
 		size_t frameCount = 0;
 
-		auto copy_frames = [&maxPts, &frameCount, &finalStreamMap](AVFormatContext* inctx, AVFormatContext* ssctx,
+		auto copy_frames = [&maxPts, &frameCount, &finalStreamMap, subtitleDelay](AVFormatContext* inctx, AVFormatContext* ssctx,
 			AVFormatContext* outctx)
 		{
 			// is this even advisable??? subtitle files should be small, right??
@@ -148,7 +148,7 @@ namespace mux
 				return a->dts < b->dts;
 			});
 
-			auto copy_packet = [&frameCount, &maxPts, &finalStreamMap](AVFormatContext* outctx, AVStream* istrm, AVPacket* pkt) {
+			auto copy_packet = [&frameCount, &maxPts, &finalStreamMap, subtitleDelay](AVFormatContext* outctx, AVStream* istrm, AVPacket* pkt) {
 
 				// looks like we're re-using the same packet.
 				pkt->stream_index = finalStreamMap[istrm];
@@ -165,6 +165,15 @@ namespace mux
 				pkt->dts = av_rescale_q_rnd(pkt->dts, istrm->time_base, ostrm->time_base, rounding);
 				pkt->duration = av_rescale_q(pkt->duration, istrm->time_base, ostrm->time_base);
 				pkt->pos = -1;
+
+				// check for subtitles
+				if(istrm->codecpar->codec_type == AVMEDIA_TYPE_SUBTITLE)
+				{
+					// this is the subtitle delay.
+					auto delay = subtitleDelay;
+					auto pts_delay = (delay * ostrm->time_base.den) / ostrm->time_base.num;
+					pkt->pts += pts_delay;
+				}
 
 				if(pkt->dts == AV_NOPTS_VALUE)
 				{
@@ -867,10 +876,13 @@ namespace mux
 
 
 
+		if(auto d = config::getSubtitleDelay(); d != 0)
+			util::log("subtitle delay: %.3f s", d);
+
 		// make the output file:
 		if(!config::isDryRun())
 		{
-			if(!writeOutput(outfile, ctx, ssctx, finalStreams, finalStreamMap))
+			if(!writeOutput(outfile, ctx, ssctx, finalStreams, finalStreamMap, config::getSubtitleDelay()))
 				return false;
 		}
 

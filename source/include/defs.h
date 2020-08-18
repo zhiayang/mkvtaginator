@@ -232,10 +232,14 @@ namespace config
 	int getSeasonNumber();
 	int getEpisodeNumber();
 
+	double getSubtitleDelay();
 
 	bool isMuxing();
 	bool isTagging();
 
+
+
+	void setSubtitleDelay(double seconds);
 
 	void setAudioLangs(const std::vector<std::string>& xs);
 	void setSubtitleLangs(const std::vector<std::string>& xs);

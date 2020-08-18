@@ -26,7 +26,7 @@ NUMFILES        := $$(($(words $(CXXSRC))))
 DEFINES         := -D__USE_MINGW_ANSI_STDIO=1
 SANITISE        :=
 
-CXXFLAGS        += -std=c++17 -fvisibility=hidden -O3 -c -Wall -fno-omit-frame-pointer $(SANITISE) $(DEFINES)
+CXXFLAGS        += -std=c++17 -fvisibility=hidden -O0 -g -c -Wall -fno-omit-frame-pointer $(SANITISE) $(DEFINES)
 LDFLAGS         += $(SANITISE) -fvisibility=hidden
 
 PRECOMP_HDRS    := source/include/precompile.h

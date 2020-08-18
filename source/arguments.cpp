@@ -28,6 +28,7 @@
 #define ARG_STOP_ON_ERROR                   "--stop-on-error"
 #define ARG_SUBTITLE_LANGS                  "--subtitle-langs"
 #define ARG_SKIP_NCOP_NCED                  "--skip-ncop-nced"
+#define ARG_SUBTITLE_DELAY                  "--subtitle-delay"
 #define ARG_PREFER_SDH_SUBS                 "--prefer-sdh-subs"
 #define ARG_PREFER_TEXT_SUBS                "--prefer-text-subs"
 #define ARG_PREFER_ENGLISH_TITLE            "--prefer-eng-title"
@@ -56,6 +57,10 @@ static void setupMap()
 
 	helpList.push_back({ ARG_TAG,
 		"enable metadata tagging"
+	});
+
+	helpList.push_back({ ARG_SUBTITLE_DELAY,
+		"number of seconds (eg. +0.1, -1.7) to delay the subtitles by (applies to both embedded subtitles and the extra-subs input)"
 	});
 
 	helpList.push_back({ ARG_MANUAL_SERIES_TITLE,
@@ -564,6 +569,31 @@ namespace args
 					else
 					{
 						util::error("%serror:%s expected (positive) integer after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
+							argv[i]);
+						exit(-1);
+					}
+				}
+				else if(!strcmp(argv[i], ARG_SUBTITLE_DELAY))
+				{
+					if(i != argc - 1)
+					{
+						i++;
+						char* end = nullptr;
+						auto delay = strtod(argv[i], &end);
+
+						if(end != argv[i] + strlen(argv[i]))
+						{
+							util::error("%serror:%s invalid number '%s' for subtitle delay", COLOUR_RED_BOLD, COLOUR_RESET,
+								argv[i]);
+							exit(-1);
+						}
+
+						config::setSubtitleDelay(delay);
+						continue;
+					}
+					else
+					{
+						util::error("%serror:%s expected decimal number after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
 							argv[i]);
 						exit(-1);
 					}

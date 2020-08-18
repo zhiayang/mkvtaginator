@@ -8,3 +8,4 @@ build
 *.mkv
 *.jpg
 *.png
+.vscode

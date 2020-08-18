@@ -271,6 +271,8 @@ namespace config
 	static int manualSeasonNumber = -1;
 	static int manualEpisodeNumber = -1;
 
+	static double subtitleDelay = 0;
+
 
 	void setAudioLangs(const std::vector<std::string>& xs)      { audioLangs = xs; }
 	void setSubtitleLangs(const std::vector<std::string>& xs)   { subtitleLangs = xs; }
@@ -309,6 +311,7 @@ namespace config
 	bool shouldSkipNCOPNCED()               { return skipNCOPNCED; }
 	int getSeasonNumber()                   { return manualSeasonNumber; }
 	int getEpisodeNumber()                  { return manualEpisodeNumber; }
+	double getSubtitleDelay()               { return subtitleDelay; }
 
 	void setManualMovieId(const std::string& x)     { movieId = x; }
 	void setManualSeriesId(const std::string& x)    { seriesId = x; }
@@ -340,6 +343,7 @@ namespace config
 	void setSkipNCOPNCED(bool x)                    { skipNCOPNCED = x; }
 	void setSeasonNumber(int x)                     { manualSeasonNumber = x; }
 	void setEpisodeNumber(int x)                    { manualEpisodeNumber = x; }
+	void setSubtitleDelay(double x)                 { subtitleDelay = x; }
 
 	void setConfigPath(const std::string& x)
 	{
