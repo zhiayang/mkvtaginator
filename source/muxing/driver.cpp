@@ -171,8 +171,18 @@ namespace mux
 				{
 					// this is the subtitle delay.
 					auto delay = subtitleDelay;
-					auto pts_delay = (delay * ostrm->time_base.den) / ostrm->time_base.num;
-					pkt->pts += pts_delay;
+
+					auto ts_delay = (delay * ostrm->time_base.den) / ostrm->time_base.num;
+					pkt->pts += ts_delay;
+
+					// note: we must also change the dts if the delay was negative, because
+					// obviously the packet must be decoded before it can be presented. if
+					// the delay was positive, this doesn't matter.
+					if(subtitleDelay < 0)
+					{
+						while(pkt->dts > pkt->pts)
+							pkt->dts += ts_delay; // it's already negative, so add it.
+					}
 				}
 
 				if(pkt->dts == AV_NOPTS_VALUE)
