@@ -873,7 +873,7 @@ namespace mux
 		auto outfile = std::fs::canonical(std::fs::path(config::getOutputFolder())) / inputfile.filename();
 
 		util::log("output: '%s'", outfile.string());
-
+		inputfile = outfile;
 
 
 		if(auto d = config::getSubtitleDelay(); d != 0)

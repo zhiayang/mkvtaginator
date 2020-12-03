@@ -3,6 +3,7 @@
 *.o
 
 *.gch
+*.gch.*
 build
 .clang_complete
 *.mkv
