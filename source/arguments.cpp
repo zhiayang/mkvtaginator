@@ -193,7 +193,7 @@ static void setupMap()
 	});
 }
 
-static constexpr const char* VERSION = "1.1.0";
+static constexpr const char* VERSION = "1.2.2";
 static void printVersion()
 {
 	printf("mkvtaginator version %s\n\n", VERSION);

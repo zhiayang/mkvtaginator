@@ -93,10 +93,12 @@ namespace tag
 		int season = 0;
 		int episode = 0;
 
-		auto regex = std::regex("(.+?) S(\\d+)E(\\d+)(?: - (.*))?");
+		auto regex = std::regex("(.+?)(?: |\\.)S(\\d+)E(\\d+)(?: |\\.)(?:.*)");
 		{
 			std::smatch sm;
 			std::regex_match(filename, sm, regex);
+
+			// zpr::println("%d matches", sm.size());
 
 			// the whole thing is considered one match. we need the series name,
 			// season number and episode number, so 3+1 = 4.
