@@ -63,7 +63,7 @@ namespace config
 				return;
 			}
 
-			util::log("reading config file '%s'", path.string());
+			// util::log("reading config file '%s'", path.string());
 
 
 			pj::value config;

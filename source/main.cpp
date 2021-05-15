@@ -6,8 +6,8 @@
 
 int main(int argc, char** argv)
 {
-	auto files = args::parseCmdLineOpts(argc, argv);
 	config::readConfig();
+	auto files = args::parseCmdLineOpts(argc, argv);
 
 	util::info("received %zu %s", files.size(), util::plural("file", files.size()));
 	if(config::getEpisodeNumber() != -1 && files.size() > 1)
