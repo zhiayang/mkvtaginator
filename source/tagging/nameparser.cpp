@@ -65,7 +65,7 @@ namespace tag
 
 
 			// special: see if there's actually a season in the title.
-			auto reg2 = std::regex("(.+?) +S(\\d+)");
+			auto reg2 = std::regex("(.+?) +[sS](\\d+)");
 			{
 				std::smatch sm;
 				std::regex_match(series, sm, reg2);
@@ -93,7 +93,7 @@ namespace tag
 		int season = 0;
 		int episode = 0;
 
-		auto regex = std::regex("(.+?)(?: |\\.)S(\\d+)E(\\d+)(?: |\\.)(?:.*)");
+		auto regex = std::regex("(.+?)(?: |\\.)[sS](\\d+)[eE](\\d+)(?: |\\.)(?:.*)");
 		{
 			std::smatch sm;
 			std::regex_match(filename, sm, regex);
