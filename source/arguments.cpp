@@ -35,13 +35,15 @@
 #define ARG_PREFER_ORIGINAL_TITLE           "--prefer-orig-title"
 #define ARG_EXTRA_SUBS_FOLDER               "--extra-subs-folder"
 #define ARG_PREFER_ONE_STREAM               "--prefer-one-stream"
-#define ARG_OVERRIDE_MOVIE_NAME             "--override-movie-name"
-#define ARG_OVERRIDE_SERIES_NAME            "--override-series-name"
-#define ARG_OVERRIDE_EPISODE_NAME           "--override-episode-name"
 #define ARG_DELETE_EXISTING_OUTPUT          "--delete-existing-output"
 #define ARG_PREFER_SIGN_SONG_SUBS           "--prefer-signs-songs-subs"
 #define ARG_NO_SMART_REPLACE_COVER          "--no-smart-replace-cover-art"
 #define ARG_RENAME_WITH_EPISODE_TITLE       "--rename-with-episode-title"
+
+// special hackjobs
+#define ARG_OVERRIDE_MOVIE_NAME             "override-movie-name"
+#define ARG_OVERRIDE_SERIES_NAME            "override-series-name"
+#define ARG_OVERRIDE_EPISODE_NAME           "override-episode-name"
 
 
 static std::vector<std::pair<std::string, std::string>> helpList;
@@ -131,25 +133,13 @@ static void setupMap()
 		"set the cover/poster image"
 	});
 
-	helpList.push_back({ ARG_COVER_IMAGE + std::string(" <series_id>"),
+	helpList.push_back({ ARG_SERIES_ID + std::string(" <series_id>"),
 		"manually specify the series ID for all files"
 	});
 
 	helpList.push_back({ ARG_OUTPUT_FOLDER + std::string(" <path_to_folder>"),
 		"specify the output folder to prevent overwriting input files; will be created if it doesn't exist"
 		" (cannot be the same as the input)"
-	});
-
-	helpList.push_back({ ARG_OVERRIDE_MOVIE_NAME,
-		"use the movie title from the filename (instead of online metadata)"
-	});
-
-	helpList.push_back({ ARG_OVERRIDE_SERIES_NAME,
-		"use the series title from the filename (instead of online metadata)"
-	});
-
-	helpList.push_back({ ARG_OVERRIDE_EPISODE_NAME,
-		"use the episode title from the filename (instead of online metadata)"
 	});
 
 	helpList.push_back({ ARG_DRY_RUN,
@@ -191,9 +181,22 @@ static void setupMap()
 	helpList.push_back({ ARG_MOVIEDB_API_KEY + std::string(" <api_key>"),
 		"specify the api key for authenticating with the moviedb api"
 	});
+
+	helpList.push_back({ "--(no-)" ARG_OVERRIDE_MOVIE_NAME,
+		"use (or don't) the movie title from the filename (instead of online metadata)"
+	});
+
+	helpList.push_back({ "--(no-)" ARG_OVERRIDE_SERIES_NAME,
+		"use (or don't) the series title from the filename (instead of online metadata)"
+	});
+
+	helpList.push_back({ "--(no-)" ARG_OVERRIDE_EPISODE_NAME,
+		"use (or don't) the episode title from the filename (instead of online metadata)"
+	});
+
 }
 
-static constexpr const char* VERSION = "1.2.4";
+static constexpr const char* VERSION = "1.3.0";
 static void printVersion()
 {
 	printf("mkvtaginator version %s\n\n", VERSION);
@@ -395,19 +398,34 @@ namespace args
 						exit(-1);
 					}
 				}
-				else if(!strcmp(argv[i], ARG_OVERRIDE_MOVIE_NAME))
+				else if(!strcmp(argv[i], "--" ARG_OVERRIDE_MOVIE_NAME))
 				{
 					config::setIsOverridingMovieName(true);
 					continue;
 				}
-				else if(!strcmp(argv[i], ARG_OVERRIDE_SERIES_NAME))
+				else if(!strcmp(argv[i], "--no-" ARG_OVERRIDE_MOVIE_NAME))
+				{
+					config::setIsOverridingMovieName(false);
+					continue;
+				}
+				else if(!strcmp(argv[i], "--" ARG_OVERRIDE_SERIES_NAME))
 				{
 					config::setIsOverridingSeriesName(true);
 					continue;
 				}
-				else if(!strcmp(argv[i], ARG_OVERRIDE_EPISODE_NAME))
+				else if(!strcmp(argv[i], "--no-" ARG_OVERRIDE_SERIES_NAME))
+				{
+					config::setIsOverridingSeriesName(false);
+					continue;
+				}
+				else if(!strcmp(argv[i], "--" ARG_OVERRIDE_EPISODE_NAME))
 				{
 					config::setIsOverridingEpisodeName(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], "--no-" ARG_OVERRIDE_EPISODE_NAME))
+				{
+					config::setIsOverridingEpisodeName(false);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_NO_SMART_REPLACE_COVER))
