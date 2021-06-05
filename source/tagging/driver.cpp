@@ -286,9 +286,9 @@ namespace tag
 		std::vector<std::string> arguments;
 
 		arguments.push_back("--attachment-name");
-		arguments.push_back(zpr::sprint("\"cover.%s\"", cover.extension() == "png" ? "png" : "jpg"));
+		arguments.push_back(zpr::sprint("\"cover.%s\"", cover.extension() == ".png" ? "png" : "jpg"));
 		arguments.push_back("--attachment-mime-type");
-		arguments.push_back(zpr::sprint("\"image/%s\"", cover.extension() == "png" ? "png" : "jpeg"));
+		arguments.push_back(zpr::sprint("\"image/%s\"", cover.extension() == ".png" ? "png" : "jpeg"));
 
 		// if there was a first attachment, replace it instead.
 		if(firstAttachment.id > 0)
