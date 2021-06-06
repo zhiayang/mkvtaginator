@@ -4,6 +4,8 @@
 
 #include "defs.h"
 
+static constexpr const char* VERSION = "1.3.1";
+
 #define ARG_HELP                            "--help"
 #define ARG_VERSION                         "--version"
 
@@ -196,7 +198,6 @@ static void setupMap()
 
 }
 
-static constexpr const char* VERSION = "1.3.0";
 static void printVersion()
 {
 	printf("mkvtaginator version %s\n\n", VERSION);

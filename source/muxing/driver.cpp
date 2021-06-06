@@ -479,7 +479,8 @@ namespace mux
 			for(const auto& subfile : files)
 			{
 				auto [ srs, ssn, ep, ttl ] = tag::parseTVShow(subfile.filename().stem());
-				if(srs == series && (ssn == season || (season == -1 || ssn == -1)) && ep == episode)
+				if(util::lowercase(srs) == util::lowercase(series)
+					&& (ssn == season || (season == -1 || ssn == -1)) && ep == episode)
 					matches.push_back(subfile);
 			}
 
@@ -498,7 +499,7 @@ namespace mux
 			for(const auto& subfile : files)
 			{
 				auto [ ttl, yr ] = tag::parseMovie(subfile.filename().stem());
-				if(title == ttl && year == yr)
+				if(util::lowercase(title) == util::lowercase(ttl) && year == yr)
 					matches.push_back(subfile);
 			}
 
