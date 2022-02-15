@@ -123,7 +123,8 @@ namespace tag
 				if(season == -1)
 					season = 1;
 
-				auto metadata = tvdb::fetchEpisodeMetadata(series, season, episode, title, config::getManualSeriesId());
+				// auto metadata = tvdb::fetchEpisodeMetadata(series, season, episode, title, config::getManualSeriesId());
+				auto metadata = tvmaze::fetchEpisodeMetadata(series, season, episode, title, config::getManualSeriesId());
 				if(!metadata.valid)
 				{
 					error("failed to find metadata");

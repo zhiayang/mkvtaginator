@@ -404,6 +404,13 @@ namespace tag
 			const std::string& manualSeriesId);
 	}
 
+	namespace tvmaze
+	{
+		// no need to login
+		EpisodeMetadata fetchEpisodeMetadata(const std::string& series, int season, int episode, const std::string& title,
+			const std::string& manualSeriesId);
+	}
+
 	namespace moviedb
 	{
 		void login();

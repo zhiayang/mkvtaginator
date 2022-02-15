@@ -25,11 +25,17 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+
+/*
+  NOTE: this copy of picojson has been modified to add support for comments.
+*/
+
 #ifndef picojson_h
 #define picojson_h
 
 #include <algorithm>
 #include <cstdio>
+#include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <cstddef>
@@ -41,6 +47,8 @@
 #include <string>
 #include <vector>
 #include <utility>
+
+#define PICOJSON_USE_INT64 1
 
 // for isnan/isinf
 #if __cplusplus >= 201103L
@@ -76,7 +84,7 @@ extern "C" {
 // experimental support for int64_t (see README.mkdn for detail)
 #ifdef PICOJSON_USE_INT64
 #define __STDC_FORMAT_MACROS
-#include <errno.h>
+// #include <errno.h>
 #include <inttypes.h>
 #endif
 
@@ -91,10 +99,10 @@ extern "C" {
 #endif
 
 #ifndef PICOJSON_ASSERT
-#define PICOJSON_ASSERT(e)                                                                                                         \
-  do {                                                                                                                             \
-    if (!(e))                                                                                                                      \
-      throw std::runtime_error(#e);                                                                                                \
+#define PICOJSON_ASSERT(e)  \
+  do {                      \
+    if (!(e))               \
+      assert(#e);           \
   } while (0)
 #endif
 
@@ -188,14 +196,34 @@ public:
   bool contains(const size_t idx) const;
   bool contains(const std::string &key) const;
   std::string to_str() const;
-  template <typename Iter> void serialize(Iter os, bool prettify = false) const;
-  std::string serialize(bool prettify = false) const;
+  template <typename Iter> void serialise(Iter os, bool prettify = false) const;
+  std::string serialise(bool prettify = false) const;
+
+  bool as_bool() const;
+  int64_t as_int() const;
+  const std::string& as_str() const;
+  const value::array& as_arr() const;
+  const value::object& as_obj() const;
+
+  bool& as_bool();
+  int64_t& as_int();
+  std::string& as_str();
+  value::array& as_arr();
+  value::object& as_obj();
+
+  bool is_bool() const;
+  bool is_int() const;
+  bool is_str() const;
+  bool is_arr() const;
+  bool is_obj() const;
+  bool is_null() const;
+
 
 private:
   template <typename T> value(const T *); // intentionally defined to block implicit conversion of pointer to bool
   template <typename Iter> static void _indent(Iter os, int indent);
-  template <typename Iter> void _serialize(Iter os, int indent) const;
-  std::string _serialize(int indent) const;
+  template <typename Iter> void _serialise(Iter os, int indent) const;
+  std::string _serialise(int indent) const;
   void clear();
 };
 
@@ -245,7 +273,8 @@ inline value::value(double n) : type_(number_type), u_() {
       isnan(n) || isinf(n)
 #endif
           ) {
-    throw std::overflow_error("");
+    PICOJSON_ASSERT(!"overflow_error");
+    // throw std::overflow_error("");
   }
   u_.number_ = n;
 }
@@ -377,7 +406,7 @@ GET(array, *u_.array_)
 GET(object, *u_.object_)
 #ifdef PICOJSON_USE_INT64
 GET(double,
-    (type_ == int64_type && (const_cast<value *>(this)->type_ = number_type, const_cast<value *>(this)->u_.number_ = u_.int64_),
+    (type_ == int64_type && (const_cast<value *>(this)->type_ = number_type, (const_cast<value *>(this)->u_.number_ = u_.int64_)),
      u_.number_))
 GET(int64_t, u_.int64_)
 #else
@@ -432,6 +461,26 @@ inline bool value::evaluate_as_boolean() const {
     return true;
   }
 }
+
+
+inline bool value::as_bool() const                { return this->get<bool>(); }
+inline int64_t value::as_int() const              { return this->get<int64_t>(); }
+inline const std::string& value::as_str() const   { return this->get<std::string>(); }
+inline const value::array& value::as_arr() const  { return this->get<value::array>(); }
+inline const value::object& value::as_obj() const { return this->get<value::object>(); }
+
+inline bool& value::as_bool()           { return this->get<bool>(); }
+inline int64_t& value::as_int()         { return this->get<int64_t>(); }
+inline std::string& value::as_str()     { return this->get<std::string>(); }
+inline value::array& value::as_arr()    { return this->get<value::array>(); }
+inline value::object& value::as_obj()   { return this->get<value::object>(); }
+
+inline bool value::is_bool() const        { return this->is<bool>(); }
+inline bool value::is_int() const         { return this->is<int64_t>(); }
+inline bool value::is_str() const         { return this->is<std::string>(); }
+inline bool value::is_arr() const         { return this->is<value::array>(); }
+inline bool value::is_obj() const         { return this->is<value::object>(); }
+inline bool value::is_null() const        { return this->is<null>(); }
 
 inline const value &value::get(const size_t idx) const {
   static value s_null;
@@ -519,7 +568,7 @@ template <typename Iter> void copy(const std::string &s, Iter oi) {
   std::copy(s.begin(), s.end(), oi);
 }
 
-template <typename Iter> struct serialize_str_char {
+template <typename Iter> struct serialise_str_char {
   Iter oi;
   void operator()(char c) {
     switch (c) {
@@ -549,19 +598,19 @@ template <typename Iter> struct serialize_str_char {
   }
 };
 
-template <typename Iter> void serialize_str(const std::string &s, Iter oi) {
+template <typename Iter> void serialise_str(const std::string &s, Iter oi) {
   *oi++ = '"';
-  serialize_str_char<Iter> process_char = {oi};
+  serialise_str_char<Iter> process_char = {oi};
   std::for_each(s.begin(), s.end(), process_char);
   *oi++ = '"';
 }
 
-template <typename Iter> void value::serialize(Iter oi, bool prettify) const {
-  return _serialize(oi, prettify ? 0 : -1);
+template <typename Iter> void value::serialise(Iter oi, bool prettify) const {
+  return _serialise(oi, prettify ? 0 : -1);
 }
 
-inline std::string value::serialize(bool prettify) const {
-  return _serialize(prettify ? 0 : -1);
+inline std::string value::serialise(bool prettify) const {
+  return _serialise(prettify ? 0 : -1);
 }
 
 template <typename Iter> void value::_indent(Iter oi, int indent) {
@@ -571,10 +620,10 @@ template <typename Iter> void value::_indent(Iter oi, int indent) {
   }
 }
 
-template <typename Iter> void value::_serialize(Iter oi, int indent) const {
+template <typename Iter> void value::_serialise(Iter oi, int indent) const {
   switch (type_) {
   case string_type:
-    serialize_str(*u_.string_, oi);
+    serialise_str(*u_.string_, oi);
     break;
   case array_type: {
     *oi++ = '[';
@@ -588,7 +637,7 @@ template <typename Iter> void value::_serialize(Iter oi, int indent) const {
       if (indent != -1) {
         _indent(oi, indent);
       }
-      i->_serialize(oi, indent);
+      i->_serialise(oi, indent);
     }
     if (indent != -1) {
       --indent;
@@ -611,12 +660,12 @@ template <typename Iter> void value::_serialize(Iter oi, int indent) const {
       if (indent != -1) {
         _indent(oi, indent);
       }
-      serialize_str(i->first, oi);
+      serialise_str(i->first, oi);
       *oi++ = ':';
       if (indent != -1) {
         *oi++ = ' ';
       }
-      i->second._serialize(oi, indent);
+      i->second._serialise(oi, indent);
     }
     if (indent != -1) {
       --indent;
@@ -636,9 +685,9 @@ template <typename Iter> void value::_serialize(Iter oi, int indent) const {
   }
 }
 
-inline std::string value::_serialize(int indent) const {
+inline std::string value::_serialise(int indent) const {
   std::string s;
-  _serialize(std::back_inserter(s), indent);
+  _serialise(std::back_inserter(s), indent);
   return s;
 }
 
@@ -838,6 +887,7 @@ template <typename Context, typename Iter> inline bool _parse_array(Context &ctx
       in.cur_++;
     in.line_++;
   }
+
   return in.expect(']') && ctx.parse_array_stop(idx);
 }
 
@@ -1197,11 +1247,12 @@ inline std::istream &operator>>(std::istream &is, picojson::value &x) {
 }
 
 inline std::ostream &operator<<(std::ostream &os, const picojson::value &x) {
-  x.serialize(std::ostream_iterator<char>(os));
+  x.serialise(std::ostream_iterator<char>(os));
   return os;
 }
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 
+namespace pj = picojson;
 #endif

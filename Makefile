@@ -6,12 +6,6 @@
 
 WARNINGS        := -Wno-unused-parameter -Wno-sign-conversion -Wno-padded -Wno-conversion -Wno-shadow -Wno-missing-noreturn -Wno-unused-macros -Wno-switch-enum -Wno-deprecated -Wno-format-nonliteral -Wno-trigraphs -Wno-unused-const-variable -Wno-deprecated-declarations
 
-GCCWARNINGS     := -Wno-init-list-lifetime
-
-
-CLANGWARNINGS   := -Wno-undefined-func-template -Wno-comma -Wno-nullability-completeness -Wno-redundant-move -Wno-nested-anon-types -Wno-gnu-anonymous-struct -Wno-reserved-id-macro -Wno-extra-semi -Wno-gnu-zero-variadic-macro-arguments -Wno-shift-sign-overflow -Wno-exit-time-destructors -Wno-global-constructors -Wno-c++98-compat-pedantic -Wno-documentation-unknown-command -Wno-weak-vtables -Wno-c++98-compat -Wold-style-cast
-
-
 OUTPUT          := build/mkvtaginator
 
 CC              ?= "clang"
@@ -26,7 +20,7 @@ NUMFILES        := $$(($(words $(CXXSRC))))
 DEFINES         := -D__USE_MINGW_ANSI_STDIO=1
 SANITISE        :=
 
-CXXFLAGS        += -std=c++17 -fvisibility=hidden -O3 -c -Wall -fno-omit-frame-pointer $(SANITISE) $(DEFINES)
+CXXFLAGS        += -std=c++17 -fvisibility=hidden -O3 -c -Wall -Wextra -fno-omit-frame-pointer $(SANITISE) $(DEFINES)
 LDFLAGS         += $(SANITISE) -fvisibility=hidden
 
 PRECOMP_HDRS    := source/include/precompile.h

@@ -26,7 +26,7 @@ namespace tag::tvdb
 		int m = std::stoi(sm[2]);
 		int d = std::stoi(sm[3]);
 
-		return zpr::sprint("%d-%02d-%02d", y, m, d);
+		return zpr::sprint("%04d-%02d-%02d", y, m, d);
 	}
 
 	static SeriesMetadata fetchSeriesMetadata(const std::string& name, const std::string& manualSeriesId)

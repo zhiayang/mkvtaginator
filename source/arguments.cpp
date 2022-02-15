@@ -4,7 +4,7 @@
 
 #include "defs.h"
 
-static constexpr const char* VERSION = "1.3.1";
+static constexpr const char* VERSION = "1.4.0";
 
 #define ARG_HELP                            "--help"
 #define ARG_VERSION                         "--version"
