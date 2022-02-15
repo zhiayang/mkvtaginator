@@ -27,8 +27,7 @@ namespace tag::tvmaze
 		return zpr::sprint("%04d-%02d-%02d", y, m, d);
 	}
 
-	// take the name by copy so we can sanitise it
-	static SeriesMetadata fetchSeriesMetadata(std::string name, const std::string& manualSeriesId)
+	static SeriesMetadata fetchSeriesMetadata(const std::string& name, const std::string& manualSeriesId)
 	{
 		SeriesMetadata ret {};
 		std::string seriesId {};
@@ -42,13 +41,14 @@ namespace tag::tvmaze
 			else
 			{
 				// for searching, "sanitise" the input by replacing '.' and '-' with spaces
-				for(char& c : name)
+				auto search_name = name;
+				for(char& c : search_name)
 					if(c == '.' || c == '-')
 						c = ' ';
 
 				auto r = cpr::Get(
 					cpr::Url(zpr::sprint("%s/search/shows", API_URL)),
-					cpr::Parameters({{ "q", name }})
+					cpr::Parameters({{ "q", search_name }})
 				);
 
 				if(r.status_code != 200)
