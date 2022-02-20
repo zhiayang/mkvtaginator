@@ -233,6 +233,7 @@ namespace config
 	static std::string coverPathName;
 	static std::string movieId;
 	static std::string seriesId;
+	static std::string episodeId;
 	static std::string outputFolder;
 
 	static std::string configPath;
@@ -282,6 +283,7 @@ namespace config
 
 	std::string getManualMovieId()          { return movieId; }
 	std::string getManualSeriesId()         { return seriesId; }
+	std::string getManualEpisodeId()        { return episodeId; }
 	std::string getManualCoverPath()        { return coverPathName; }
 	std::string getOutputFolder()           { return outputFolder; }
 	std::string getTVDBApiKey()             { return tvdbApiKey; }
@@ -315,6 +317,7 @@ namespace config
 
 	void setManualMovieId(const std::string& x)     { movieId = x; }
 	void setManualSeriesId(const std::string& x)    { seriesId = x; }
+	void setManualEpisodeId(const std::string& x)   { episodeId = x; }
 	void setManualCoverPath(const std::string& x)   { coverPathName = x; }
 	void setOutputFolder(const std::string& x)      { outputFolder = x; }
 	void setTVDBApiKey(const std::string& x)        { tvdbApiKey = x; }

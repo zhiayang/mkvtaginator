@@ -233,13 +233,24 @@ namespace tag::tvmaze
 			return ret;
 
 		{
-			auto r = cpr::Get(
-				cpr::Url(zpr::sprint("%s/shows/%s/episodebynumber", API_URL, ret.seriesMeta.id)),
-				cpr::Parameters({
-					{ "season", std::to_string(season) },
-					{ "number", std::to_string(episode) }
-				})
-			);
+			cpr::Response r {};
+
+			if(auto episode_id = config::getManualEpisodeId(); !episode_id.empty())
+			{
+				r = cpr::Get(
+					cpr::Url(zpr::sprint("%s/episodes/%s", API_URL, episode_id))
+				);
+			}
+			else
+			{
+				r = cpr::Get(
+					cpr::Url(zpr::sprint("%s/shows/%s/episodebynumber", API_URL, ret.seriesMeta.id)),
+					cpr::Parameters({
+						{ "season", std::to_string(season) },
+						{ "number", std::to_string(episode) }
+					})
+				);
+			}
 
 			if(r.status_code != 200)
 			{

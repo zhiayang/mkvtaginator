@@ -197,6 +197,7 @@ namespace config
 	std::string getOutputFolder();
 	std::string getManualMovieId();
 	std::string getManualSeriesId();
+	std::string getManualEpisodeId();
 	std::string getManualCoverPath();
 
 	std::string getMovieDBApiKey();
@@ -256,6 +257,7 @@ namespace config
 	void setOutputFolder(const std::string& x);
 	void setManualMovieId(const std::string& x);
 	void setManualSeriesId(const std::string& x);
+	void setManualEpisodeId(const std::string& x);
 	void setManualCoverPath(const std::string& x);
 	void setMovieDBApiKey(const std::string& x);
 	void setTVDBApiKey(const std::string& x);

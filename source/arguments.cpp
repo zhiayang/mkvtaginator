@@ -4,7 +4,7 @@
 
 #include "defs.h"
 
-static constexpr const char* VERSION = "1.4.0";
+static constexpr const char* VERSION = "1.4.2";
 
 #define ARG_HELP                            "--help"
 #define ARG_VERSION                         "--version"
@@ -12,9 +12,8 @@ static constexpr const char* VERSION = "1.4.0";
 #define ARG_MUX                             "--mux"
 #define ARG_TAG                             "--tag"
 #define ARG_COVER_IMAGE                     "--cover"
-#define ARG_MOVIE_ID                        "--movie"
 #define ARG_CONFIG_PATH                     "--config"
-#define ARG_SERIES_ID                       "--series"
+
 #define ARG_RENAME_FILES                    "--rename"
 #define ARG_MANUAL_SEASON                   "--season"
 #define ARG_MANUAL_EPISODE                  "--episode"
@@ -41,6 +40,12 @@ static constexpr const char* VERSION = "1.4.0";
 #define ARG_PREFER_SIGN_SONG_SUBS           "--prefer-signs-songs-subs"
 #define ARG_NO_SMART_REPLACE_COVER          "--no-smart-replace-cover-art"
 #define ARG_RENAME_WITH_EPISODE_TITLE       "--rename-with-episode-title"
+
+#define ARG_MOVIE_ID                        "--movie-id"
+#define ARG_SERIES_ID                       "--series-id"
+#define ARG_EPISODE_ID                      "--episode-id"
+
+
 
 // special hackjobs
 #define ARG_OVERRIDE_MOVIE_NAME             "override-movie-name"
@@ -137,6 +142,10 @@ static void setupMap()
 
 	helpList.push_back({ ARG_SERIES_ID + std::string(" <series_id>"),
 		"manually specify the series ID for all files"
+	});
+
+	helpList.push_back({ ARG_EPISODE_ID + std::string(" <episode_id>"),
+		"manually specify the episode ID; currently the only way to tag specials on TVMaze"
 	});
 
 	helpList.push_back({ ARG_OUTPUT_FOLDER + std::string(" <path_to_folder>"),
@@ -319,8 +328,7 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected path after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected path after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -334,8 +342,7 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected id after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected id after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -349,8 +356,20 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected id after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected id after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
+						exit(-1);
+					}
+				}
+				else if(!strcmp(argv[i], ARG_EPISODE_ID))
+				{
+					if(i != argc - 1)
+					{
+						i++;
+						continue;
+					}
+					else
+					{
+						util::error("%serror:%s expected id after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -364,8 +383,7 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -379,8 +397,7 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -394,8 +411,7 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -515,8 +531,7 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -530,8 +545,7 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -564,8 +578,7 @@ namespace args
 					else
 					{
 					not_number:
-						util::error("%serror:%s expected (positive) integer after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected (positive) integer after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -587,8 +600,7 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected (positive) integer after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected (positive) integer after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -602,8 +614,7 @@ namespace args
 
 						if(end != argv[i] + strlen(argv[i]))
 						{
-							util::error("%serror:%s invalid number '%s' for subtitle delay", COLOUR_RED_BOLD, COLOUR_RESET,
-								argv[i]);
+							util::error("%serror:%s invalid number '%s' for subtitle delay", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 							exit(-1);
 						}
 
@@ -612,8 +623,7 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected decimal number after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected decimal number after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -627,8 +637,7 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected path after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected path after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -642,8 +651,7 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected path after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected path after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -657,8 +665,7 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
@@ -672,15 +679,13 @@ namespace args
 					}
 					else
 					{
-						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET,
-							argv[i]);
+						util::error("%serror:%s expected string after '%s' option", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 						exit(-1);
 					}
 				}
 				else if(argv[i][0] == '-')
 				{
-					util::error("%serror:%s unrecognised option '%s'", COLOUR_RED_BOLD, COLOUR_RESET,
-						argv[i]);
+					util::error("%serror:%s unrecognised option '%s'", COLOUR_RED_BOLD, COLOUR_RESET, argv[i]);
 					exit(-1);
 				}
 				else

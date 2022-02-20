@@ -22,13 +22,9 @@ As for dependencies, `mkvpropedit`, `mkvextract`, and `mkvmerge` must be in `$PA
 
 Basic usage is: `./mkvtaginator (--tag|--mux) [options] <input files>`. You can pass more than one file to the program,
 but they must all have the `.mkv` extension (and obviously must be valid mkv files). Use `--tag` to enable metadata tagging,
-`--mux` to enable input muxing, or both to do... both.
+`--mux` to enable input muxing, or both to do both.
 
 It's recommended to use `--dry-run` first to preview the command-line for `mkvpropedit`, especially when editing in-place (the default).
-
-Since in the typical use-case you probably already know the correct series, use `--movie <API_SPECIFIC_ID>` or `--series <...>` to
-manually specify the identifer of the series/movie, to skip searching and ensure that no user interaction is required. Note that using
-`--movie` implies a movie input (and so it won't try to match against TV series), and vice versa.
 
 To enable "out-of-place" output (ie. the input files are copied, and the new copy is modified with the originals untouched), simply use
 `--output-folder <FOLDER_PATH>`; for any given input file, the output path must not coincide with the path of the input &mdash; since that
@@ -38,7 +34,26 @@ To rename the output file into so-called "canonical" form, use `--rename`. This 
 `SERIES_NAME S01E01 - EPISODE_TITLE.mkv` (the episode title is omitted if none exists), and movies into the form `TITLE (YEAR).mkv`. The
 extension will always be `mkv`.
 
-If, for some reason, you need to manually specify the season number, you can use `--season <N>`.
+Since in the typical use-case you probably already know the correct series, use `--movie-id <API_SPECIFIC_ID>` or `--series-id <...>` to
+manually specify the identifier of the series/movie, to skip searching and ensure that no user interaction is required. Note that using
+`--movie-id` implies a movie input (and so it won't try to match against TV series), and vice versa.
+
+If, for some reason, you need to manually specify the season or episode numbers, you can use `--season <N>` or `--episode <N>`.
+
+
+### OVAs / Specials
+
+For anime or shows with specials (eg. OVAs, DW Christmas episodes), the "typical" convention is to tag them as season 0, with episode
+numbering following air date. This was how tvdb worked, but tvmaze doesn't follow this convention.
+
+Instead, specials are either part of a season ("significant"), or not ("insignificant") (we currently don't distinguish these). However,
+this means that they are not accessible by searching for "season 0" (or passing `--season 0`). To get around this, you can find the
+episode ID using their website, and pass `--episode-id` explicitly.
+
+In this case, we will still fill the episode's metadata (and rename it) with whatever you used for `--season` and `--episode`.
+
+
+
 
 
 ### Building
@@ -90,8 +105,12 @@ The preferred file is first (ie. it will prefer a file `cover.jpg` over `poster.
 
 ### Metadata sources
 
-Currently, `mkvtaginator` uses [TheTVDB](https://thetvdb.com) and [TheMovieDB](https://themoviedb.org) as metadata sources. You must
-create your own API key, and pass it to the program using `--tvdb-api <API_KEY>` and `--moviedb-api <API_KEY>`.
+Currently, `mkvtaginator` uses [TVMaze](https://tvmaze.com) and [TheMovieDB](https://themoviedb.org)
+as metadata sources. For TheMovieDB, you must create your own API key, and pass it to the program using `--moviedb-api <API_KEY>`.
+The TVMaze API is currently publicly available (without authentication), so this is not necessary.
+
+Old code for fetching data from TheTVDB is still in this repo; they have since made their v4 API paid (and their v3 api unavailable),
+so we no longer use them.
 
 
 ### Caveats
@@ -136,8 +155,8 @@ These are:
 
 ### API attribution
 
-TV information is provided by TheTVDB.com, but `mkvtaginator` is not endorsed or certified by TheTVDB.com or its affiliates. `mkvtaginator`
-also uses the TMDb API but is not endorsed or certified by TMDb.
+TV information is provided by TVMaze.com, and movie data is provided by TMDb; `mkvtaginator` is neither endorsed nor certified by
+either website.
 
 
 
