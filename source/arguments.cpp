@@ -4,7 +4,7 @@
 
 #include "defs.h"
 
-static constexpr const char* VERSION = "1.4.2";
+static constexpr const char* VERSION = "1.4.3";
 
 #define ARG_HELP                            "--help"
 #define ARG_VERSION                         "--version"
@@ -365,6 +365,7 @@ namespace args
 					if(i != argc - 1)
 					{
 						i++;
+						config::setManualEpisodeId(argv[i]);
 						continue;
 					}
 					else
