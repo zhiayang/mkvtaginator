@@ -11,7 +11,7 @@ extern "C" {
 	#include <libavutil/log.h>
 	#include <libavutil/timestamp.h>
 	#include <libavformat/avformat.h>
-	#include <libavutil/channel_layout.h> // Add this include for new channel layout API
+	#include <libavutil/channel_layout.h>
 }
 
 namespace misc
