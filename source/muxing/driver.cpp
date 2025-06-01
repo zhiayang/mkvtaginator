@@ -11,6 +11,7 @@ extern "C" {
 	#include <libavutil/log.h>
 	#include <libavutil/timestamp.h>
 	#include <libavformat/avformat.h>
+	#include <libavutil/channel_layout.h>
 }
 
 namespace misc
@@ -341,17 +342,22 @@ namespace mux
 				info.heading = "res:";
 
 				char buf[64] = { 0 };
+#if LIBAVUTIL_VERSION_MAJOR >= 57 // FFmpeg 6.0+ uses AVChannelLayout
+				av_channel_layout_describe(&cp->ch_layout, buf, 63);
+				int channels = cp->ch_layout.nb_channels;
+#else
 				av_get_channel_layout_string(buf, 63, cp->channels, cp->channel_layout);
+				int channels = cp->channels;
+#endif
 				std::string layout = buf;
 
 				std::string format = av_get_sample_fmt_name(static_cast<AVSampleFormat>(cp->format));
 
 				info.subheading = zpr::sprint("%d Hz, %d ch (%s), %s", cp->sample_rate,
-					cp->channels, layout, format);
+					channels, layout, format);
 
 				if(cp->bits_per_raw_sample > 0)
 					info.subheading += zpr::sprint(" (%d-bit)", cp->bits_per_raw_sample);
-
 
 				opt.infos.push_back(info);
 			}
