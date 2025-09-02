@@ -29,6 +29,8 @@ static constexpr const char* VERSION = "1.4.3";
 #define ARG_STOP_ON_ERROR                   "--stop-on-error"
 #define ARG_SUBTITLE_LANGS                  "--subtitle-langs"
 #define ARG_SKIP_NCOP_NCED                  "--skip-ncop-nced"
+#define ARG_NO_SERIES                       "--no-series"
+#define ARG_NO_MOVIE                        "--no-movie"
 #define ARG_SUBTITLE_DELAY                  "--subtitle-delay"
 #define ARG_PREFER_SDH_SUBS                 "--prefer-sdh-subs"
 #define ARG_PREFER_TEXT_SUBS                "--prefer-text-subs"
@@ -66,6 +68,14 @@ static void setupMap()
 
 	helpList.push_back({ ARG_TAG,
 		"enable metadata tagging"
+	});
+
+	helpList.push_back({ ARG_NO_SERIES,
+		"disable TV series metadata search, only try movies"
+	});
+
+	helpList.push_back({ ARG_NO_MOVIE,
+		"disable movie metadata search, only try TV series"
 	});
 
 	helpList.push_back({ ARG_SUBTITLE_DELAY,
@@ -515,6 +525,16 @@ namespace args
 				else if(!strcmp(argv[i], ARG_SKIP_NCOP_NCED))
 				{
 					config::setSkipNCOPNCED(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_NO_SERIES))
+				{
+					config::setDisableSeriesSearch(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_NO_MOVIE))
+				{
+					config::setDisableMovieSearch(true);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_RENAME_WITH_EPISODE_TITLE))

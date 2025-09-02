@@ -224,6 +224,9 @@ namespace config
 
 	bool shouldSkipNCOPNCED();
 
+	bool disableSeriesSearch();
+	bool disableMovieSearch();
+
 	bool isDryRun();
 	bool disableProgress();
 	bool shouldRenameFiles();
@@ -250,6 +253,8 @@ namespace config
 	void setPreferOneStream(bool x);
 	void setPreferSignSongSubs(bool x);
 	void setSkipNCOPNCED(bool x);
+	void setDisableSeriesSearch(bool x);
+	void setDisableMovieSearch(bool x);
 	void setSeasonNumber(int x);
 	void setEpisodeNumber(int x);
 

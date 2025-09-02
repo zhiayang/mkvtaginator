@@ -254,6 +254,8 @@ namespace config
 	static bool stopOnError = false;
 	static bool renameFiles = false;
 	static bool skipNCOPNCED = false;
+	static bool noSeriesSearch = false;
+	static bool noMovieSearch = false;
 	static bool preferEnglishTitle = false;
 	static bool noSmartReplaceCoverArt = false;
 	static bool renameWithoutEpisodeTitle = false;
@@ -311,6 +313,8 @@ namespace config
 	bool isPreferOneStream()                { return preferOneStream; }
 	bool isPreferSignSongSubs()             { return preferSignSongSubs; }
 	bool shouldSkipNCOPNCED()               { return skipNCOPNCED; }
+	bool disableSeriesSearch()              { return noSeriesSearch; }
+	bool disableMovieSearch()               { return noMovieSearch; }
 	int getSeasonNumber()                   { return manualSeasonNumber; }
 	int getEpisodeNumber()                  { return manualEpisodeNumber; }
 	double getSubtitleDelay()               { return subtitleDelay; }
@@ -344,6 +348,8 @@ namespace config
 	void setPreferOneStream(bool x)                 { preferOneStream = x; }
 	void setPreferSignSongSubs(bool x)              { preferSignSongSubs = x; }
 	void setSkipNCOPNCED(bool x)                    { skipNCOPNCED = x; }
+	void setDisableSeriesSearch(bool x)             { noSeriesSearch = x; }
+	void setDisableMovieSearch(bool x)              { noMovieSearch = x; }
 	void setSeasonNumber(int x)                     { manualSeasonNumber = x; }
 	void setEpisodeNumber(int x)                    { manualEpisodeNumber = x; }
 	void setSubtitleDelay(double x)                 { subtitleDelay = x; }
