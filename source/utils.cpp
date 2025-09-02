@@ -113,12 +113,23 @@ namespace util
 	    std::mbstate_t state = std::mbstate_t();
 	    const char* s = str.c_str();
 
-	    size_t len = 1 + std::mbsrtowcs(NULL, &s, 0, &state);
-	    auto buf = new wchar_t[len];
+	    size_t result = std::mbsrtowcs(NULL, &s, 0, &state);
+	    if(result == static_cast<size_t>(-1))
+		{
+			auto ret = std::wstring();
+			// restore the locale.
+			setlocale(LC_ALL, "");
+			return ret;
+		}
 
-	    std::mbsrtowcs(buf, &s, len, &state);
+		size_t len = result + 1;
+		auto buf = new wchar_t[len];
 
-	    auto ret = std::wstring(buf, len - 1);
+		state = std::mbstate_t();
+		s = str.c_str();
+		std::mbsrtowcs(buf, &s, len, &state);
+
+	    auto ret = std::wstring(buf, result);
 	    delete[] buf;
 
 		// restore the locale.
