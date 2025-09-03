@@ -106,7 +106,7 @@ namespace tag
 		std::vector<std::string>& coverArtNames)
 	{
 		// try tv series
-		if(!config::getManualSeriesId().empty() || config::getManualMovieId().empty())
+		if(!config::disableSeriesSearch() && (!config::getManualSeriesId().empty() || config::getManualMovieId().empty()))
 		{
 			auto [ series, season, episode, title ] = parseTVShow(filepath.stem().string());
 
@@ -160,7 +160,7 @@ namespace tag
 		}
 
 
-		if(!config::getManualMovieId().empty() || config::getManualSeriesId().empty())
+		if(!config::disableMovieSearch() && (!config::getManualMovieId().empty() || config::getManualSeriesId().empty()))
 		{
 			// try movie
 			auto [ title, year ] = parseMovie(filepath.stem().string());
