@@ -256,6 +256,8 @@ namespace config
 	static bool skipNCOPNCED = false;
 	static bool noSeriesSearch = false;
 	static bool noMovieSearch = false;
+	static bool downloadCover = false;
+	static bool forceDownloadCover = false;
 	static bool preferEnglishTitle = false;
 	static bool noSmartReplaceCoverArt = false;
 	static bool renameWithoutEpisodeTitle = false;
@@ -315,6 +317,8 @@ namespace config
 	bool shouldSkipNCOPNCED()               { return skipNCOPNCED; }
 	bool disableSeriesSearch()              { return noSeriesSearch; }
 	bool disableMovieSearch()               { return noMovieSearch; }
+	bool shouldDownloadCover()              { return downloadCover; }
+	bool shouldForceDownloadCover()         { return forceDownloadCover; }
 	int getSeasonNumber()                   { return manualSeasonNumber; }
 	int getEpisodeNumber()                  { return manualEpisodeNumber; }
 	double getSubtitleDelay()               { return subtitleDelay; }
@@ -350,6 +354,8 @@ namespace config
 	void setSkipNCOPNCED(bool x)                    { skipNCOPNCED = x; }
 	void setDisableSeriesSearch(bool x)             { noSeriesSearch = x; }
 	void setDisableMovieSearch(bool x)              { noMovieSearch = x; }
+	void setShouldDownloadCover(bool x)             { downloadCover = x; }
+	void setShouldForceDownloadCover(bool x)        { forceDownloadCover = x; }
 	void setSeasonNumber(int x)                     { manualSeasonNumber = x; }
 	void setEpisodeNumber(int x)                    { manualEpisodeNumber = x; }
 	void setSubtitleDelay(double x)                 { subtitleDelay = x; }

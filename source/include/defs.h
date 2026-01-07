@@ -226,6 +226,8 @@ namespace config
 
 	bool disableSeriesSearch();
 	bool disableMovieSearch();
+	bool shouldDownloadCover();
+	bool shouldForceDownloadCover();
 
 	bool isDryRun();
 	bool disableProgress();
@@ -255,6 +257,8 @@ namespace config
 	void setSkipNCOPNCED(bool x);
 	void setDisableSeriesSearch(bool x);
 	void setDisableMovieSearch(bool x);
+	void setShouldDownloadCover(bool x);
+	void setShouldForceDownloadCover(bool x);
 	void setSeasonNumber(int x);
 	void setEpisodeNumber(int x);
 
@@ -340,6 +344,7 @@ namespace tag
 		std::string normalTitle;
 		std::string canonicalTitle;
 		std::string episodeTitle;
+		std::string coverUrl;
 	};
 
 	struct SeriesMetadata : GenericMetadata
