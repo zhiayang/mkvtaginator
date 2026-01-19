@@ -122,7 +122,7 @@ namespace tag
 		std::string title;
 		int year = 0;
 
-		auto regex = std::regex("(.+?) \\((\\d+)\\)");
+		auto regex = std::regex("(.+?) \\((\\d+)\\)(?:.*)");
 		{
 			std::smatch sm;
 			std::regex_match(filename, sm, regex);
