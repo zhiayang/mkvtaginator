@@ -226,6 +226,7 @@ namespace config
 
 	bool disableSeriesSearch();
 	bool disableMovieSearch();
+	bool shouldMatchMovieYear();
 
 	bool isDryRun();
 	bool disableProgress();
@@ -255,6 +256,7 @@ namespace config
 	void setSkipNCOPNCED(bool x);
 	void setDisableSeriesSearch(bool x);
 	void setDisableMovieSearch(bool x);
+	void setMatchMovieYear(bool x);
 	void setSeasonNumber(int x);
 	void setEpisodeNumber(int x);
 
