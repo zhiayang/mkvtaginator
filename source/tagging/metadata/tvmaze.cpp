@@ -177,6 +177,12 @@ namespace tag::tvmaze
 				return x.as_str();
 			});
 
+			if(auto img = data["image"]; !img.is<pj::null>())
+			{
+				if(auto orig = img.get("original"); !orig.is<pj::null>())
+					ret.coverUrl = orig.as_str();
+			}
+
 			// actors come from elsewhere:
 			{
 				auto r = cpr::Get(
@@ -286,6 +292,7 @@ namespace tag::tvmaze
 				ret.dbName = epName.get<std::string>();
 
 			ret.actors = ret.seriesMeta.actors;
+			ret.coverUrl = ret.seriesMeta.coverUrl;
 			ret.name = ret.dbName;
 
 			if(config::isOverridingEpisodeName() && !title.empty())

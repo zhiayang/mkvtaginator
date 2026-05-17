@@ -6,6 +6,7 @@
 #include <fstream>
 
 #include "defs.h"
+#include "cpr/cpr.h"
 
 #include "picojson.h"
 namespace pj = picojson;
@@ -39,6 +40,7 @@ namespace tag
 
 		std::string extractedFile;
 		bool doNotReattach = false;
+		bool isCoverArt = false;
 	};
 
 	static TmpAttachment extractFirstAttachmentIfNecessary(const std::fs::path& filepath, std::vector<std::string>& cleanupList)
@@ -78,10 +80,12 @@ namespace tag
 
 				// if this is already a cover image, then just replace it -- we don't need to extract and
 				// reattach it. prevents cover art from spamming the file when you run mkvtaginator multiple times.
-				if(!config::disableSmartReplaceCoverArt() && util::match(attachment.mime, "image/jpeg", "image/png")
+				if(util::match(attachment.mime, "image/jpeg", "image/png")
 					&& util::match(attachment.name, "cover", "cover.jpg", "cover.jpeg", "cover.png"))
 				{
-					attachment.doNotReattach = true;
+					attachment.isCoverArt = true;
+					if(!config::disableSmartReplaceCoverArt())
+						attachment.doNotReattach = true;
 				}
 				else if(!config::isDryRun())
 				{
@@ -400,6 +404,35 @@ namespace tag
 		// get the cover art
 		{
 			auto cover = findCoverArt(filepath, coverArtNames);
+
+			// download cover art if enabled and appropriate
+			if(!meta.coverUrl.empty() && config::shouldDownloadCover()
+				&& ((cover.empty() && !firstAttachment.isCoverArt) || config::shouldForceDownloadCover()))
+			{
+				if(config::isDryRun())
+				{
+					util::log("dryrun: would download cover art from '%s'", meta.coverUrl);
+				}
+				else
+				{
+					util::info("downloading cover art...");
+					auto r = cpr::Get(cpr::Url(meta.coverUrl));
+					if(r.status_code == 200 && !r.text.empty())
+					{
+						auto ext = (meta.coverUrl.find(".png") != std::string::npos) ? "png" : "jpg";
+						auto tmpCover = zpr::sprint(".tmp-mkvinator-cover.%s", ext);
+						std::ofstream out(tmpCover, std::ios::binary);
+						out.write(r.text.data(), r.text.size());
+						out.close();
+						cover = tmpCover;
+						filesToCleanup.push_back(tmpCover);
+					}
+					else
+					{
+						util::warn("failed to download cover art (status %d)", r.status_code);
+					}
+				}
+			}
 
 			if(!cover.empty())
 			{

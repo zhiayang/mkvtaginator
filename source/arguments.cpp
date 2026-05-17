@@ -31,6 +31,8 @@ static constexpr const char* VERSION = "1.4.3";
 #define ARG_SKIP_NCOP_NCED                  "--skip-ncop-nced"
 #define ARG_NO_SERIES                       "--no-series"
 #define ARG_NO_MOVIE                        "--no-movie"
+#define ARG_DOWNLOAD_COVER                  "--download-cover"
+#define ARG_FORCE_DOWNLOAD_COVER            "--force-download-cover"
 #define ARG_SUBTITLE_DELAY                  "--subtitle-delay"
 #define ARG_PREFER_SDH_SUBS                 "--prefer-sdh-subs"
 #define ARG_PREFER_TEXT_SUBS                "--prefer-text-subs"
@@ -174,6 +176,14 @@ static void setupMap()
 
 	helpList.push_back({ ARG_NO_AUTO_COVER,
 		"do not automatically detect cover art in the current folder"
+	});
+
+	helpList.push_back({ ARG_DOWNLOAD_COVER,
+		"download cover art from metadata API if no local cover exists and file has no embedded cover"
+	});
+
+	helpList.push_back({ ARG_FORCE_DOWNLOAD_COVER,
+		"download cover art from metadata API, overriding any existing local or embedded cover"
 	});
 
 	helpList.push_back({ ARG_STOP_ON_ERROR,
@@ -540,6 +550,17 @@ namespace args
 				else if(!strcmp(argv[i], ARG_NO_MOVIE))
 				{
 					config::setDisableMovieSearch(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_DOWNLOAD_COVER))
+				{
+					config::setShouldDownloadCover(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_FORCE_DOWNLOAD_COVER))
+				{
+					config::setShouldForceDownloadCover(true);
+					config::setShouldDownloadCover(true);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_MATCH_MOVIE_YEAR))

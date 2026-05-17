@@ -199,6 +199,9 @@ namespace tag::moviedb
 			ret.dbTitle         = data.get("title").get<std::string>();
 			ret.originalTitle   = data.get("original_title").get<std::string>();
 			ret.airDate         = data.get("release_date").get<std::string>();
+
+			if(auto poster = data.get("poster_path"); !poster.is<pj::null>())
+				ret.coverUrl = zpr::sprint("https://image.tmdb.org/t/p/original%s", poster.get<std::string>());
 			{
 				std::smatch sm;
 				std::regex_match(ret.airDate, sm, std::regex("(\\d+)-(\\d+)-(\\d+)"));
