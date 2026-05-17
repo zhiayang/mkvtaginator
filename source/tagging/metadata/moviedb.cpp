@@ -27,14 +27,18 @@ namespace tag::moviedb
 			// note: there's no need to cache this, since we don't do multiple movies
 			// with the same title (what's the point of that?) unlike tv shows.
 
+			cpr::Parameters params = {
+				{ "api_key", getToken() },
+				{ "query", title },
+				{ "include_adult", true }
+			};
+
+			if(config::shouldMatchMovieYear() && year > 0)
+				params.AddParameter({ "year", std::to_string(year) });
+
 			auto r = cpr::Get(
 				cpr::Url(zpr::sprint("%s/search/movie", API_URL)),
-				cpr::Parameters({
-					{ "api_key", getToken() },
-					{ "query", title },
-					// { "year", year },
-					{ "include_adult", true }
-				})
+				params
 			);
 
 			if(r.status_code != 200)

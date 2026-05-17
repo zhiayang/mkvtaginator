@@ -228,6 +228,7 @@ namespace config
 	bool disableMovieSearch();
 	bool shouldDownloadCover();
 	bool shouldForceDownloadCover();
+	bool shouldMatchMovieYear();
 
 	bool isDryRun();
 	bool disableProgress();
@@ -259,6 +260,7 @@ namespace config
 	void setDisableMovieSearch(bool x);
 	void setShouldDownloadCover(bool x);
 	void setShouldForceDownloadCover(bool x);
+	void setMatchMovieYear(bool x);
 	void setSeasonNumber(int x);
 	void setEpisodeNumber(int x);
 

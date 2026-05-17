@@ -44,6 +44,7 @@ static constexpr const char* VERSION = "1.4.3";
 #define ARG_PREFER_SIGN_SONG_SUBS           "--prefer-signs-songs-subs"
 #define ARG_NO_SMART_REPLACE_COVER          "--no-smart-replace-cover-art"
 #define ARG_RENAME_WITH_EPISODE_TITLE       "--rename-with-episode-title"
+#define ARG_MATCH_MOVIE_YEAR                "--match-movie-year"
 
 #define ARG_MOVIE_ID                        "--movie-id"
 #define ARG_SERIES_ID                       "--series-id"
@@ -110,6 +111,10 @@ static void setupMap()
 
 	helpList.push_back({ ARG_MOVIE_ID,
 		"specify the movie id (moviedb) (implies movie -- disables tv matching)"
+	});
+
+	helpList.push_back({ ARG_MATCH_MOVIE_YEAR,
+		"filter movie search results by year parsed from filename (moviedb)"
 	});
 
 	helpList.push_back({ ARG_AUDIO_LANGS,
@@ -556,6 +561,11 @@ namespace args
 				{
 					config::setShouldForceDownloadCover(true);
 					config::setShouldDownloadCover(true);
+					continue;
+				}
+				else if(!strcmp(argv[i], ARG_MATCH_MOVIE_YEAR))
+				{
+					config::setMatchMovieYear(true);
 					continue;
 				}
 				else if(!strcmp(argv[i], ARG_RENAME_WITH_EPISODE_TITLE))
